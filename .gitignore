@@ -1,0 +1,14 @@
+node_modules
+.next
+out
+dist
+.env
+.env.local
+.env.*.local
+.vercel
+.expo
+apps/mobile/.expo
+apps/mobile/node_modules
+apps/mobile/android
+apps/mobile/ios
+*.apk

@@ -1,20 +1,15 @@
 # GetWink
 
-GetWinked is an early dating app idea. The repo is currently a placeholder while the product direction is being shaped.
+GetWink is a beta Android dating/social discovery app and landing page.
 
-## Current idea
+## Stack
 
-The rough goal is a simple match experience with profiles, discovery, likes, and chat. I have not added the app code here yet.
+- Next.js + TypeScript for landing page and server-side API routes
+- Vercel deployment for `getwink.app`
+- Supabase Auth, Postgres, Storage, and Realtime-ready data layer
+- React Native + Expo + TypeScript for Android APK
+- Server-side AI provider abstraction for Langdock
 
-## Planned pieces
+## Patch status
 
-- User profiles
-- Match discovery
-- Likes or interest signals
-- Chat after a match
-- Safety and reporting basics
-- Clear privacy settings
-
-## Status
-
-Empty placeholder repo. I am keeping this README here so the repo has context instead of looking abandoned.
+Patch 001 bootstraps the empty repository with the web landing page, legal/safety pages, Supabase core schema migration, AI provider abstraction skeleton, and Expo mobile starter.

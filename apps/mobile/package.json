@@ -1,0 +1,23 @@
+{
+  "name": "getwink-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "build:android-preview": "eas build --platform android --profile preview"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "latest",
+    "expo": "latest",
+    "expo-image-picker": "latest",
+    "expo-status-bar": "latest",
+    "react": "latest",
+    "react-native": "latest",
+    "react-native-gesture-handler": "latest",
+    "react-native-reanimated": "latest",
+    "react-native-safe-area-context": "latest"
+  },
+  "devDependencies": { "@babel/core": "latest", "@types/react": "latest", "typescript": "latest" }
+}

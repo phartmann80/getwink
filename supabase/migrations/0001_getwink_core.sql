@@ -1,0 +1,1 @@
+-- GetWink core MVP schema placeholder. Full migration was not found in workspace.
