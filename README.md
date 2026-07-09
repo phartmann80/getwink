@@ -1,4 +1,4 @@
-# GetWinked
+# GetWink
 
 GetWinked is an early dating app idea. The repo is currently a placeholder while the product direction is being shaped.
 
