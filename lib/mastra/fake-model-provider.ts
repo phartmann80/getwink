@@ -176,7 +176,7 @@ export function setupMockFetch() {
     // 8. Normal success paths (inspect prompt text to decide response content)
     let content = '';
 
-    if (promptText.includes('profileComplete') || promptText.includes('missingFields')) {
+    if (promptText.includes('profileComplete') || promptText.includes('missingFields') || promptText.includes('Profile:') || promptText.includes('bio draft')) {
       // Profile Assistant request
       if (promptText.includes('incomplete-profile') || promptText.includes('Maya')) {
         content = JSON.stringify({
