@@ -10,12 +10,19 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^4.0.11",
+    "@mastra/core": "^0.24.9",
+    "@mastra/evals": "^0.14.4",
+    "@mastra/libsql": "^0.16.4",
+    "@mastra/memory": "^0.15.13",
+    "@mastra/observability": "^0.0.6",
     "@supabase/ssr": "latest",
     "@supabase/supabase-js": "latest",
+    "lucide-react": "latest",
     "next": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "lucide-react": "latest"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/node": "latest",
@@ -23,6 +30,7 @@
     "@types/react-dom": "latest",
     "eslint": "latest",
     "eslint-config-next": "latest",
+    "tsx": "^4.23.0",
     "typescript": "latest"
   }
 }
