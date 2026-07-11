@@ -73,24 +73,42 @@ export async function getAuthenticatedUser(request: Request) {
     }
   }
 
-  // Bypass for non-production environments with DEV_USER_ID
+  let resolvedUserId: string;
+
   if (process.env.NODE_ENV !== 'production' && process.env.DEV_USER_ID) {
     if (token === 'mock-invalid-token') {
       throw new Error('Invalid token');
     }
-    return { id: process.env.DEV_USER_ID, role: 'authenticated' };
+    resolvedUserId = process.env.DEV_USER_ID;
+  } else {
+    if (!token) {
+      throw new Error('No authorization token found');
+    }
+    const supabase = createSupabaseClient(token);
+    const { data: { user }, error } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      throw new Error(error?.message || 'Invalid or expired user session');
+    }
+    resolvedUserId = user.id;
   }
 
-  if (!token) {
-    throw new Error('No authorization token found');
+  // Derive account status from profiles using service-role client
+  const serviceClient = createSupabaseServiceRoleClient();
+  const { data: profile } = await serviceClient
+    .from('profiles')
+    .select('account_status')
+    .eq('id', resolvedUserId)
+    .single();
+
+  if (profile) {
+    if (profile.account_status === 'suspended') {
+      throw new Error('suspended_account');
+    }
+    if (profile.account_status === 'deleted') {
+      throw new Error('deleted_account');
+    }
   }
 
-  const supabase = createSupabaseClient(token);
-  const { data: { user }, error } = await supabase.auth.getUser();
-
-  if (error || !user) {
-    throw new Error(error?.message || 'Invalid or expired user session');
-  }
-
-  return user;
+  return { id: resolvedUserId, role: 'authenticated' };
 }

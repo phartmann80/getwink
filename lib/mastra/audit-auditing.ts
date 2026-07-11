@@ -29,61 +29,75 @@ export interface AuditAiEvent {
     requestId?: string;
     traceId?: string;
     errorCategory?: string;
+    fallback_used?: boolean;
     [key: string]: any;
   };
 }
 
 /**
- * Normalizes internal errors into client-safe production responses without leaking keys or credentials.
+ * Normalizes internal errors into controlled client-safe categories without leaking credentials.
  */
 export function normalizeError(err: any): { category: string; message: string; status: number } {
   const errMsg = err instanceof Error ? err.message : String(err);
   const errMsgLower = errMsg.toLowerCase();
 
+  // 1. Payload size limits
+  if (errMsgLower.includes('payload_too_large') || errMsgLower.includes('payload too large')) {
+    return {
+      category: 'REQUEST_TOO_LARGE',
+      message: 'Invalid request payload. Request too large.',
+      status: 413,
+    };
+  }
+
+  // 2. Authentication failures
   if (
     errMsgLower.includes('no authorization token found') ||
     errMsgLower.includes('invalid token') ||
     errMsgLower.includes('expired user session') ||
     errMsgLower.includes('unauthorized') ||
-    errMsgLower.includes('jwt')
+    errMsgLower.includes('jwt') ||
+    errMsgLower.includes('suspended_account') ||
+    errMsgLower.includes('deleted_account') ||
+    errMsgLower.includes('authentication')
   ) {
     return {
-      category: 'unauthorized',
+      category: 'AUTHENTICATION_FAILED',
       message: 'Authentication is required.',
       status: 401,
     };
   }
 
-  if (errMsgLower.includes('forbidden') || errMsgLower.includes('unauthorized feature') || errMsgLower.includes('role')) {
+  // 3. Authorization / entitlment / role limits
+  if (
+    errMsgLower.includes('forbidden') ||
+    errMsgLower.includes('unauthorized feature') ||
+    errMsgLower.includes('role')
+  ) {
     return {
-      category: 'forbidden',
+      category: 'VALIDATION_FAILED',
       message: 'You are not authorized to access this feature.',
       status: 403,
     };
   }
 
-  if (errMsgLower.includes('payload too large')) {
-    return {
-      category: 'invalid_input',
-      message: 'Invalid request payload. Payload too large.',
-      status: 413,
-    };
-  }
-
+  // 4. Invalid feature or messages input
   if (
-    errMsgLower.includes('payload too large') ||
     errMsgLower.includes('messages must be an array') ||
     errMsgLower.includes('invalid ai message') ||
+    errMsgLower.includes('invalid') ||
     errMsgLower.includes('missing') ||
-    errMsgLower.includes('invalid')
+    errMsgLower.includes('invalid_json') ||
+    errMsgLower.includes('feature')
   ) {
     return {
-      category: 'invalid_input',
+      category: 'VALIDATION_FAILED',
       message: 'Invalid request payload.',
       status: 400,
     };
   }
 
+  // 5. Provider Timeout
   if (
     errMsgLower.includes('timeout') ||
     errMsgLower.includes('deadline') ||
@@ -91,47 +105,53 @@ export function normalizeError(err: any): { category: string; message: string; s
     errMsgLower.includes('abort')
   ) {
     return {
-      category: 'timeout',
+      category: 'PROVIDER_TIMEOUT',
       message: 'AI assistant took too long to respond. Please try again.',
       status: 504,
     };
   }
 
+  // 6. POC Disabled
   if (
-    errMsgLower.includes('api') ||
-    errMsgLower.includes('provider') ||
-    errMsgLower.includes('status 40') ||
-    errMsgLower.includes('status 50') ||
-    errMsgLower.includes('unauthorized API key') ||
-    errMsgLower.includes('internal server error') ||
-    errMsgLower.includes('apicallerror') ||
-    errMsgLower.includes('500') ||
-    errMsgLower.includes('502') ||
-    errMsgLower.includes('503')
+    errMsgLower.includes('poc is disabled') ||
+    errMsgLower.includes('poc_disabled')
   ) {
     return {
-      category: 'provider_error',
-      message: 'AI assistant is unavailable right now.',
+      category: 'POC_DISABLED',
+      message: 'Mastra AI POC is disabled.',
+      status: 503,
+    };
+  }
+
+  // 7. Structured output validation / malformed responses
+  if (
+    errMsgLower.includes('structured output validation failed') ||
+    errMsgLower.includes('bad response') ||
+    errMsgLower.includes('malformed')
+  ) {
+    return {
+      category: 'PROVIDER_BAD_RESPONSE',
+      message: 'AI assistant returned an invalid response. Please try again.',
       status: 502,
     };
   }
 
+  // Default: Provider unavailable
   return {
-    category: 'unknown_error',
+    category: 'PROVIDER_UNAVAILABLE',
     message: 'AI assistant is unavailable right now.',
-    status: 500,
+    status: 502,
   };
 }
 
 /**
  * Audit log insertion inside the PostgreSQL database using a service-role client.
- * Strictly guarantees that RLS is bypassed for the insert command but uses validated server-side parameters.
+ * Bypasses RLS utilizing authenticated parameters derived only from server validations.
  */
 export async function auditAiUsage(event: AuditAiEvent): Promise<void> {
   try {
     const supabase = createSupabaseServiceRoleClient();
 
-    // Map properties to supabase columns
     const payload = {
       user_id: event.userId,
       ai_conversation_id: event.conversationId || null,
