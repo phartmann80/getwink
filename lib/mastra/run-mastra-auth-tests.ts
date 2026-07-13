@@ -636,6 +636,41 @@ assertions.push({
   },
 });
 
+// ----------------------------------------------------
+// TEST 19: DEV_USER_ID Production Denial Check
+// ----------------------------------------------------
+assertions.push({
+  name: 'DEV_USER_ID Production Denial Check',
+  run: async () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+    
+    process.env.DEV_USER_ID = testUserId;
+    process.env.GETWINK_MASTRA_POC_ENABLED = 'true';
+
+    try {
+      const req = new Request('https://www.getwink.app/api/ai/chat', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          feature: 'general_assistant',
+          messages: [{ role: 'user', content: 'hello' }],
+        }),
+      });
+
+      const res = await POST(req);
+      assertEqual(res.status, 401, 'Bypass must be blocked under NODE_ENV=production');
+      const json = await res.json();
+      assertEqual(json.error, 'Authentication is required.', 'Expected authentication failure');
+    } finally {
+      process.env.NODE_ENV = originalEnv;
+      process.env.DEV_USER_ID = devUserIdBackup;
+    }
+  },
+});
+
 
 async function runAll() {
   console.log('========================================');
