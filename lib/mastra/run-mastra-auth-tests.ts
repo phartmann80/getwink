@@ -3,6 +3,7 @@ import { loadEnvConfig } from '@next/env';
 loadEnvConfig(process.cwd());
 
 import { POST } from '../../app/api/ai/chat/route';
+import { GET as healthGET, POST as healthPOST } from '../../app/api/health/route';
 import { setupMockFetch, restoreFetch, setScenario } from './fake-model-provider';
 import { createSupabaseServiceRoleClient, createSupabaseClient } from '../supabase/server';
 
@@ -643,7 +644,7 @@ assertions.push({
   name: 'DEV_USER_ID Production Denial Check',
   run: async () => {
     const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'production';
+    (process.env as any).NODE_ENV = 'production';
     
     process.env.DEV_USER_ID = testUserId;
     process.env.GETWINK_MASTRA_POC_ENABLED = 'true';
@@ -665,16 +666,78 @@ assertions.push({
       const json = await res.json();
       assertEqual(json.error, 'Authentication is required.', 'Expected authentication failure');
     } finally {
-      process.env.NODE_ENV = originalEnv;
+      (process.env as any).NODE_ENV = originalEnv;
       process.env.DEV_USER_ID = devUserIdBackup;
     }
+  },
+});
+
+// ----------------------------------------------------
+// TEST 20: GET /api/health
+// ----------------------------------------------------
+assertions.push({
+  name: 'GET /api/health public endpoint',
+  run: async () => {
+    const req = new Request('https://www.getwink.app/api/health', {
+      method: 'GET',
+    });
+    const res = await healthGET(req);
+    assertEqual(res.status, 200, 'Expected 200 OK');
+    assertEqual(res.headers.get('content-type'), 'application/json', 'Expected JSON content type');
+    assertEqual(res.headers.get('cache-control'), 'no-store', 'Expected no-store caching');
+    const json = await res.json();
+    assertEqual(json.ok, true, 'Expected ok to be true');
+    assertEqual(json.service, 'getwink', 'Expected service to be getwink');
+    assertEqual(typeof json.timestamp, 'string', 'Expected ISO timestamp string');
+  },
+});
+
+// ----------------------------------------------------
+// TEST 21: POST /api/health
+// ----------------------------------------------------
+assertions.push({
+  name: 'POST /api/health public endpoint',
+  run: async () => {
+    const req = new Request('https://www.getwink.app/api/health', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ ping: 'pong' }),
+    });
+    const res = await healthPOST(req);
+    assertEqual(res.status, 200, 'Expected 200 OK');
+    assertEqual(res.headers.get('content-type'), 'application/json', 'Expected JSON content type');
+    assertEqual(res.headers.get('cache-control'), 'no-store', 'Expected no-store caching');
+    const json = await res.json();
+    assertEqual(json.ok, true, 'Expected ok to be true');
+    assertEqual(json.service, 'getwink', 'Expected service to be getwink');
+  },
+});
+
+// ----------------------------------------------------
+// TEST 22: GET /api/health without Content-Type header
+// ----------------------------------------------------
+assertions.push({
+  name: 'GET /api/health without Content-Type request header',
+  run: async () => {
+    const req = new Request('https://www.getwink.app/api/health', {
+      method: 'GET',
+      headers: {}, // No headers
+    });
+    const res = await healthGET(req);
+    assertEqual(res.status, 200, 'Expected 200 OK');
+    assertEqual(res.headers.get('content-type'), 'application/json', 'Expected JSON content type');
+    assertEqual(res.headers.get('cache-control'), 'no-store', 'Expected no-store caching');
+    const json = await res.json();
+    assertEqual(json.ok, true, 'Expected ok to be true');
   },
 });
 
 
 async function runAll() {
   console.log('========================================');
-  console.log('Running Patch 002B Hardening Security Verification Tests');
+  console.log('Running Patch 002C Production Correction Verification Tests');
   console.log('========================================');
 
   const serviceClient = createSupabaseServiceRoleClient();
