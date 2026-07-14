@@ -1,2 +1,15 @@
 import Link from 'next/link';
-export function Footer(){return <footer className="container footer"><span>© {new Date().getFullYear()} GetWink. Beta access for Android.</span><span className="nav-links"><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/safety">Safety guidelines</Link></span></footer>}
+
+export function Footer() {
+  return (
+    <footer className="site-footer">
+      <div><strong>GetWink</strong><span>Interesting is personal.</span></div>
+      <nav aria-label="Footer navigation">
+        <Link href="/privacy">Privacy</Link>
+        <Link href="/terms">Terms</Link>
+        <Link href="/safety">Safety</Link>
+      </nav>
+      <small>© {new Date().getFullYear()} GetWink</small>
+    </footer>
+  );
+}
