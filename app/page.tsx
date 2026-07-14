@@ -47,6 +47,7 @@ export default function HomePage() {
               loop
               muted
               playsInline
+              style={{ objectPosition: 'center 80%', bottom: '-30px' }}
               aria-label="A demo video showing GetWink app discovery with swipe-right for Wink and swipe-left for Pass"
             />
 
