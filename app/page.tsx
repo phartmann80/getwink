@@ -33,28 +33,43 @@ export default function HomePage() {
               <span>interesting one</span>
               <em>😉</em>
             </h1>
-            <p>
-              GetWink learns what catches your interest—while you stay in control of every Wink, match, and message.
-            </p>
           </div>
 
           <div className="hero-stage" aria-label="GetWink discovery experience preview">
             <div className="black-swell" aria-hidden="true" />
-            <video
-              className="hero-person"
-              src="/getwink_.mp4"
-              autoPlay
-              loop
-              muted
-              playsInline
-              style={{
-                objectPosition: 'center 95%',
-                bottom: '-30px',
-                mixBlendMode: 'normal',
-                clipPath: 'inset(50% 0px 0px 0px)',
-              }}
-              aria-label="A demo video showing GetWink app discovery with swipe-right for Wink and swipe-left for Pass"
-            />
+            
+            <div className="hero-phone-container" style={{
+              position: 'absolute',
+              zIndex: 4,
+              width: 'min(310px, 58vw)',
+              height: 'min(560px, 52vh)',
+              left: '50%',
+              bottom: '-50px',
+              transform: 'translateX(-50%)',
+              borderRadius: '40px',
+              border: '14px solid #15141b',
+              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
+              overflow: 'hidden',
+              backgroundColor: '#15141b',
+            }}>
+              <video
+                src="/getwink_.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
+                style={{
+                  position: 'absolute',
+                  height: '190%',
+                  width: 'auto',
+                  top: '-85%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  objectFit: 'cover',
+                }}
+                aria-label="A demo video showing GetWink app discovery with swipe-right for Wink and swipe-left for Pass"
+              />
+            </div>
 
             <div className="wink-bubble wink-bubble-one" aria-hidden="true">Wink</div>
             <div className="wink-bubble wink-bubble-two" aria-hidden="true">Hi!</div>
