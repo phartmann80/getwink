@@ -46,11 +46,15 @@ export default function HomePage() {
               muted
               playsInline
               style={{
-                objectPosition: 'center 85%',
-                bottom: '-76px',
+                width: 'min(820px, 75vw)',
+                height: 'auto',
+                aspectRatio: '4/3',
+                bottom: '-120px',
                 zIndex: 4,
                 mixBlendMode: 'normal',
-                clipPath: 'inset(45% 0px 0px 0px)',
+                filter: 'none',
+                borderRadius: '16px',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
               }}
               aria-label="A demo video showing GetWink app discovery with swipe-right for Wink and swipe-left for Pass"
             />
