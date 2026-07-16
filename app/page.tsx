@@ -12,7 +12,8 @@ const apkReady = Boolean(
 const profiles = [
   { name: 'Maya', age: 28, detail: 'Vienna · coffee walks', tone: 'coral' },
   { name: 'Sofia', age: 30, detail: 'Berlin · travel stories', tone: 'mint' },
-  { name: 'Lea', age: 27, detail: 'Munich · indie films', tone: 'lilac' },
+  { name: 'Liam', age: 27, detail: 'Munich · bouldering & jazz', tone: 'yellow' },
+  { name: 'Noah', age: 29, detail: 'Hamburg · vintage vinyl', tone: 'lilac' },
 ];
 
 export default function HomePage() {
@@ -83,6 +84,17 @@ export default function HomePage() {
             <p>
               Hard rules keep discovery safe and eligible. GetWink’s intelligence layer can then learn from the profiles you choose to explore—not just the ones you swipe past.
             </p>
+            <article className="intro-avatar-card">
+              <div className="intro-avatar-portrait">L</div>
+              <div className="intro-avatar-info">
+                <strong>Liam, 26</strong>
+                <span>Vienna · Coffee & Hiking</span>
+                <span className="intro-avatar-badge">Active Now</span>
+              </div>
+              <div className="intro-avatar-action">
+                <span>👋</span>
+              </div>
+            </article>
           </div>
 
           <div className="signal-row">
