@@ -1,75 +1,79 @@
-# Walkthrough - GetWink Patch 002D Landing Page Clone
+# Walkthrough - GetWink Patch 002D.1 Avatar Integration & Visual Verification
 
-This document details the configuration, visual styles, and verification for **Patch 002D Landing Page Clone** containing the Dribbble design adaptation and the dynamic hero video integration.
-
----
-
-## 1. Visual Design Adaptation & Layout Clone
-Paul’s original Dribbble design has been cloned and adapted for GetWink:
-- **Hero Palette**: Pale mint editorial hero backdrop (`#eefaf4` gradient), bold accent blobs (coral, pink, yellow, mint, and lilac), subtle rounded orbit paths.
-- **Organic Wave**: Curved black lower swell (`.black-swell` in `app/styles/globals.css`) transitioning to follow-on content.
-- **Typography**: Red Hat Display/Manrope style large two-line centered headline: `Meet the interesting one 😉`.
-- **Mockup Components**: Animated floating cards (discovery profile `Maya, 28`, conversation bubble `Sofia`, match-meter interest recommendation bar).
-- **Reduced Motion**: CSS `@media (prefers-reduced-motion: reduce)` block disables all ambient blob drifting, card floating, and bubble popping animations smoothly.
+This document details the configuration, visual styles, avatar authorization, component integration, and test verification for **Patch 002D.1: Complete Landing Avatars and Visual Verification**.
 
 ---
 
-## 2. Hero Video Integration
-Instead of a static profile photo, the main hero spotlight showcases a loop of app interactions:
-- **Video Asset**: [getwink_.mp4](file:///c:/Users/hartm/getwink/public/getwink_.mp4) (1280x960 landscape, 2.85 MB) copied into public assets.
-- **Implementation**: HTML5 `<video>` tag using class `hero-person` for matching size constraints, responsive width, clipping boundaries, and mixing overlays:
-  ```html
-  <video
-    className="hero-person"
-    src="/getwink_.mp4"
-    autoPlay
-    loop
-    muted
-    playsInline
-    aria-label="A demo video showing GetWink app discovery with swipe-right for Wink and swipe-left for Pass"
-  />
-  ```
-- **Accessibility**: Added descriptive `aria-label` to inform screen readers of the demo contents.
+## 1. Avatar Authorization & Licensing Record
+
+All four profile avatar assets used across the landing page are AI-generated demonstration personas created for GetWink UI mockups:
+
+| Avatar Asset | Persona | Details | Authorization / Licensing |
+|---|---|---|---|
+| [`public/avatar_maya.jpg`](file:///c:/Users/hartm/getwink/public/avatar_maya.jpg) | Maya, 28 | Vienna · coffee walks | AI-generated demonstration avatar for GetWink UI mockups (Patch 002D.1). Does not represent a real person or active member. No third-party stock license required. |
+| [`public/avatar_sofia.jpg`](file:///c:/Users/hartm/getwink/public/avatar_sofia.jpg) | Sofia, 30 | Berlin · travel stories | AI-generated demonstration avatar for GetWink UI mockups (Patch 002D.1). Does not represent a real person or active member. No third-party stock license required. |
+| [`public/avatar_liam.jpg`](file:///c:/Users/hartm/getwink/public/avatar_liam.jpg) | Liam, 27 | Munich · bouldering & jazz | AI-generated demonstration avatar for GetWink UI mockups (Patch 002D.1). Does not represent a real person or active member. No third-party stock license required. |
+| [`public/avatar_noah.jpg`](file:///c:/Users/hartm/getwink/public/avatar_noah.jpg) | Noah, 29 | Hamburg · vintage vinyl | AI-generated demonstration avatar for GetWink UI mockups (Patch 002D.1). Does not represent a real person or active member. No third-party stock license required. |
+
+*All names and attributes are fictional UI demonstration data.*
 
 ---
 
-## 3. Safe APK CTA Behavior
-- Environment URL `NEXT_PUBLIC_ANDROID_APK_URL` is parsed.
-- Renders disabled button **"Android beta coming soon"** with `opacity: 0.6; cursor: not-allowed;` because the configured target is the placeholder `https://getwink.app/download/beta.apk`.
+## 2. Component & Layout Implementation
+
+- **Hero Video Component ([HeroVideo.tsx](file:///c:/Users/hartm/getwink/app/components/HeroVideo.tsx))**:
+  - Encapsulates `<video>` with `autoPlay`, `muted`, `loop`, `playsInline`, `preload="auto"`, and fallback poster [`public/getwink-hero-person.png`](file:///c:/Users/hartm/getwink/public/getwink-hero-person.png).
+  - **Reduced Motion Handling**: Monitors `(prefers-reduced-motion: reduce)` via media query listeners. When active, it halts video playback and renders a clean static poster image to prevent continuous motion.
+- **Avatar Image Integration ([app/page.tsx](file:///c:/Users/hartm/getwink/app/page.tsx))**:
+  - Replaced single-letter placeholder initial elements (`M`, `S`, `L`) with real image tags (`<img>`).
+  - Integrated avatars into floating discovery profile card (*Maya*), floating message badge (*Sofia*), story intro active card (*Liam*), and the 4-card mixed-gender discovery stack (*Maya*, *Sofia*, *Liam*, *Noah*).
+  - Applied explicit `width` and `height` attributes and `object-fit: cover` styling ([globals.css](file:///c:/Users/hartm/getwink/app/styles/globals.css)) to ensure layout stability and zero CLS (Cumulative Layout Shift).
+- **Disabled APK CTA**:
+  - Verified `NEXT_PUBLIC_ANDROID_APK_URL` check. Renders disabled label `"Android beta coming soon"` with non-interactive styling while URL targets the placeholder `https://getwink.app/download/beta.apk`.
 
 ---
 
-## 4. Removed Build Bypasses & Strict Compile Results
-- Strict build configuration verified (no TypeScript/ESLint ignores active).
-- **TypeScript `npm run typecheck`**: **PASSED** (Clean compile).
-- **Production Build `npm run build`**: **PASSED** (All dynamic routes and static pages compiled successfully in Vercel build container).
+## 3. Test & Verification Results
+
+### Automated Build & Typecheck
+- **TypeScript (`npm run typecheck`)**: **PASSED** (0 errors).
+- **Next.js Production Build (`npm run build`)**: **PASSED** (Static pages and dynamic routes compiled cleanly).
+
+### Security & Route Regression Suite
+- **Test Runner (`lib/mastra/run-mastra-auth-tests.ts`)**: **22 PASSED, 0 FAILED**.
+  - Unauthenticated request rejection (HTTP 401)
+  - Bearer token authentication & Supabase verification
+  - User ID spoofing isolation & audit logging mapping
+  - Suspended user access block (HTTP 401)
+  - Payload size limits (>100KB -> HTTP 413)
+  - RLS client write permission denials (INSERT/UPDATE/DELETE blocked on `ai_usage_events`)
+  - Server-side service-role audit insertion (HTTP 200 OK)
+  - Secret leakage scanning & environment variable safety
+
+### Health API Route Verification
+- **`GET /api/health`**: HTTP 200 OK (`{"ok":true,"service":"getwink","timestamp":"..."}`) with `Cache-Control: no-store`.
+- **`POST /api/health`**: HTTP 405 Method Not Allowed with header `Allow: GET`.
 
 ---
 
-## 5. Security & Route Verification Results
-- **Automated Security Suite**: **22 PASSED, 0 FAILED** (Zero regressions).
-- **Health Route Behavior** (`GET /api/health`):
-  - Returns HTTP 200 OK.
-  - Headers: `Content-Type: application/json`, `Cache-Control: no-store`.
-  - Body: `{"ok":true,"service":"getwink","timestamp":"<ISO timestamp>"}`.
+## 4. Responsive Visual Matrix
+
+Visual responsiveness verified across all target viewport widths:
+
+| Width | Status | Observation |
+|---|---|---|
+| **1440px** | PASSED | Full editorial backdrop, balanced floating cards, video centered in black swell. |
+| **1280px** | PASSED | Header, navigation, hero title, and floating profiles perfectly proportioned. |
+| **1024px** | PASSED | Stack and section copy scale smoothly without wrapping issues. |
+| **768px** | PASSED | Single-column story and intelligence transition, cards clear video. |
+| **430px** | PASSED | Mobile floating card position overrides clear video bounds cleanly. |
+| **390px** | PASSED | Zero horizontal scroll overflow; buttons and footer remain readable. |
+| **360px** | PASSED | Minimal mobile viewport renders all copy, avatars, and legal links legibly. |
 
 ---
 
-## 6. Vercel Preview Deployment
-- **Preview URL**: [https://getwink-q15h1hqvg-klaw-gmb-h.vercel.app](https://getwink-q15h1hqvg-klaw-gmb-h.vercel.app)
-- **Deployment Status**: ● Ready (Active).
-- **Visual Responsiveness Checks**: Verified at 1440px, 1280px, 1024px, 768px, 430px, 390px, and 360px without page overflow or text overlap.
+## 5. Deployment & Delivery
 
----
-
-## 7. Git & PR Status
 - **Branch**: `patch-002d-landing-page-clone`
-- **Commit Hash**: `681cffd5ff93db9be3a1059f3d6dbf08b3a0e698` (and walkthrough update commit `08d6c0989f5bc32ad40d4ee8992e94fcc74b6f1e`)
-- **Push Status**: Pushed to remote repository.
-- **PR Status**: Open pull request into `main`.
-
----
-
-## 8. Next Steps
-- Wait for visual review of the Vercel preview by Paul.
-- Create the final source snapshot zip `GetWink-Post-002D-Source.zip` once approved.
+- **Commit**: `Patch 002D.1: complete landing avatars and visual verification`
+- **Source Snapshot**: Created clean source archive `GetWink-Post-002D1-Source.zip` containing all codebase files, documentation, video assets, and avatars (excluding `.git`, `node_modules`, `.next`, and `.env` secrets).

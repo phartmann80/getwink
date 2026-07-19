@@ -21,14 +21,13 @@ export async function GET(request?: Request) {
 export async function POST(request?: Request) {
   return new NextResponse(
     JSON.stringify({
-      ok: true,
-      service: 'getwink',
-      timestamp: new Date().toISOString(),
+      error: 'Method Not Allowed',
     }),
     {
-      status: 200,
+      status: 405,
       headers: {
         'Content-Type': 'application/json',
+        'Allow': 'GET',
         'Cache-Control': 'no-store',
       },
     }

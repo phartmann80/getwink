@@ -693,10 +693,10 @@ assertions.push({
 });
 
 // ----------------------------------------------------
-// TEST 21: POST /api/health
+// TEST 21: POST /api/health (405 Method Not Allowed)
 // ----------------------------------------------------
 assertions.push({
-  name: 'POST /api/health public endpoint',
+  name: 'POST /api/health public endpoint (405)',
   run: async () => {
     const req = new Request('https://www.getwink.app/api/health', {
       method: 'POST',
@@ -706,12 +706,8 @@ assertions.push({
       body: JSON.stringify({ ping: 'pong' }),
     });
     const res = await healthPOST(req);
-    assertEqual(res.status, 200, 'Expected 200 OK');
-    assertEqual(res.headers.get('content-type'), 'application/json', 'Expected JSON content type');
-    assertEqual(res.headers.get('cache-control'), 'no-store', 'Expected no-store caching');
-    const json = await res.json();
-    assertEqual(json.ok, true, 'Expected ok to be true');
-    assertEqual(json.service, 'getwink', 'Expected service to be getwink');
+    assertEqual(res.status, 405, 'Expected 405 Method Not Allowed');
+    assertEqual(res.headers.get('allow'), 'GET', 'Expected Allow header GET');
   },
 });
 

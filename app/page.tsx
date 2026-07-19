@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
+import { HeroVideo } from './components/HeroVideo';
 
 const apkUrl = process.env.NEXT_PUBLIC_ANDROID_APK_URL;
 const apkReady = Boolean(
@@ -10,10 +11,10 @@ const apkReady = Boolean(
 );
 
 const profiles = [
-  { name: 'Maya', age: 28, detail: 'Vienna · coffee walks', tone: 'coral' },
-  { name: 'Sofia', age: 30, detail: 'Berlin · travel stories', tone: 'mint' },
-  { name: 'Liam', age: 27, detail: 'Munich · bouldering & jazz', tone: 'yellow' },
-  { name: 'Noah', age: 29, detail: 'Hamburg · vintage vinyl', tone: 'lilac' },
+  { name: 'Maya', age: 28, detail: 'Vienna · coffee walks', tone: 'coral', avatar: '/avatar_maya.jpg' },
+  { name: 'Sofia', age: 30, detail: 'Berlin · travel stories', tone: 'mint', avatar: '/avatar_sofia.jpg' },
+  { name: 'Liam', age: 27, detail: 'Munich · bouldering & jazz', tone: 'yellow', avatar: '/avatar_liam.jpg' },
+  { name: 'Noah', age: 29, detail: 'Hamburg · vintage vinyl', tone: 'lilac', avatar: '/avatar_noah.jpg' },
 ];
 
 export default function HomePage() {
@@ -39,14 +40,11 @@ export default function HomePage() {
           <div className="hero-stage" aria-label="GetWink discovery experience preview">
             <div className="black-swell" aria-hidden="true" />
             
-            <video
+            <HeroVideo
               className="hero-person"
               src="/getwink_.mp4"
-              autoPlay
-              loop
-              muted
-              playsInline
-              aria-label="A demo video showing GetWink app discovery with swipe-right for Wink and swipe-left for Pass"
+              poster="/getwink-hero-person.png"
+              ariaLabel="A demo video showing GetWink app discovery with swipe-right for Wink and swipe-left for Pass"
             />
 
             <div className="wink-bubble wink-bubble-one" aria-hidden="true">Wink</div>
@@ -54,13 +52,13 @@ export default function HomePage() {
             <div className="wink-bubble wink-bubble-three" aria-hidden="true">😉</div>
 
             <article className="floating-profile profile-left">
-              <div className="profile-photo profile-photo-coral">M</div>
+              <img className="profile-photo" src="/avatar_maya.jpg" alt="Maya" width={44} height={44} />
               <div><small>New discovery</small><strong>Maya, 28</strong><span>Vienna · 3 shared interests</span></div>
               <button type="button" aria-label="Wink at Maya">Wink</button>
             </article>
 
             <article className="floating-message message-right">
-              <div className="tiny-avatar">S</div>
+              <img className="tiny-avatar" src="/avatar_sofia.jpg" alt="Sofia" width={38} height={38} />
               <div><strong>Sofia</strong><span>Rome or Florence? 😄</span></div>
               <span className="online-dot" aria-label="Online" />
             </article>
@@ -85,7 +83,7 @@ export default function HomePage() {
               Hard rules keep discovery safe and eligible. GetWink’s intelligence layer can then learn from the profiles you choose to explore—not just the ones you swipe past.
             </p>
             <article className="intro-avatar-card">
-              <div className="intro-avatar-portrait">L</div>
+              <img className="intro-avatar-portrait" src="/avatar_liam.jpg" alt="Liam" width={54} height={54} />
               <div className="intro-avatar-info">
                 <strong>Liam, 26</strong>
                 <span>Vienna · Coffee & Hiking</span>
@@ -119,7 +117,7 @@ export default function HomePage() {
           <div className="profile-stack" aria-label="Example discovery profiles">
             {profiles.map((profile, index) => (
               <article className={`stack-card stack-${index + 1} ${profile.tone}`} key={profile.name}>
-                <div className="stack-portrait">{profile.name.charAt(0)}</div>
+                <img className="stack-portrait" src={profile.avatar} alt={profile.name} width={280} height={245} />
                 <small>We think you may find</small>
                 <h3>{profile.name}, {profile.age}</h3>
                 <p>{profile.detail}</p>
