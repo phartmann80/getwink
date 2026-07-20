@@ -9,8 +9,8 @@ export function Header() {
         <span>GetWink</span>
       </Link>
       <nav className="site-nav" aria-label="Main navigation">
-        <Link href="/#how">How it works</Link>
-        <Link href="/#ai">Intelligence</Link>
+        <Link href="/how">How it works</Link>
+        <Link href="/ai">Intelligence</Link>
         <Link href="/safety">Safety</Link>
         <Link href="/privacy">Privacy</Link>
       </nav>

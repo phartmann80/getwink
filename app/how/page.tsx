@@ -1,0 +1,61 @@
+import { Header } from '../components/Header';
+import { Footer } from '../components/Footer';
+
+export default function HowItWorksPage() {
+  return (
+    <>
+      <Header />
+      <main className="legal-main">
+        <header className="legal-hero">
+          <span className="legal-kicker">Simple & Intentional</span>
+          <h1>How GetWink Works</h1>
+          <p className="legal-lead">
+            GetWink replaces endless swiping with intentional signals, deterministic safety rules, and mutual consent.
+          </p>
+        </header>
+
+        <section className="story-split-container" style={{ marginBottom: '40px' }}>
+          <div className="story-gray-block">
+            <span className="dark-label">More than another swipe app</span>
+            <div className="hand-phone-wrapper">
+              <img
+                src="/hand_holding_phone.png"
+                alt="Hand holding smartphone displaying GetWink app"
+                className="hand-phone-img"
+              />
+            </div>
+            <p className="story-gray-text">
+              Hard rules keep discovery safe and eligible. GetWink’s intelligence layer can then learn from the profiles you choose to explore, not just the ones you swipe past.
+            </p>
+          </div>
+
+          <div className="story-pink-block">
+            <h2 className="story-pink-title">A familiar gesture.<br />A smarter feeling.</h2>
+          </div>
+        </section>
+
+        <section className="legal-card">
+          <h2>01 Wink</h2>
+          <p>
+            A playful, low-pressure signal when someone catches your interest. Sending a Wink lets another member know you are interested without public exposure or social friction.
+          </p>
+        </section>
+
+        <section className="legal-card">
+          <h2>02 Mutual Consent</h2>
+          <p>
+            Chat opens only when two people choose each other. Unsolicited messages and cold DMs are completely eliminated so every conversation starts with mutual interest.
+          </p>
+        </section>
+
+        <section className="legal-card">
+          <h2>03 Learn & Discover</h2>
+          <p>
+            With your permission, GetWink gradually improves which eligible profiles appear first based on the connections and profiles you choose to explore.
+          </p>
+        </section>
+      </main>
+      <Footer />
+    </>
+  );
+}
