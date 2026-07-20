@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
+import { Wink3DCard } from './components/Wink3DCard';
 
 const apkUrl = process.env.NEXT_PUBLIC_ANDROID_APK_URL;
 const apkReady = Boolean(
@@ -81,6 +82,9 @@ export default function HomePage() {
         </section>
 
         <section id="how" className="story-section">
+          <div className="story-blob story-blob-coral" aria-hidden="true" />
+          <div className="story-blob story-blob-mint" aria-hidden="true" />
+          
           <div className="story-intro">
             <div className="story-col-left">
               <span className="section-label">More than another swipe app</span>
@@ -106,7 +110,7 @@ export default function HomePage() {
                   <span className="intro-avatar-badge">Active Now</span>
                 </div>
                 <div className="intro-avatar-action">
-                  <Sparkles size={18} className="intro-action-icon" />
+                  <Wink3DCard />
                 </div>
               </article>
             </div>
