@@ -1,7 +1,6 @@
 import { ArrowDown, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
-import { HeroVideo } from './components/HeroVideo';
 
 const apkUrl = process.env.NEXT_PUBLIC_ANDROID_APK_URL;
 const apkReady = Boolean(
@@ -40,11 +39,17 @@ export default function HomePage() {
           <div className="hero-stage" aria-label="GetWink discovery experience preview">
             <div className="black-swell" aria-hidden="true" />
             
-            <HeroVideo
+            <video
               className="hero-person"
               src="/getwink_.mp4"
-              poster="/getwink-hero-person.png"
-              ariaLabel="A demo video showing GetWink app discovery with swipe-right for Wink and swipe-left for Pass"
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="auto"
+              width={820}
+              height={615}
+              aria-label="A demo video showing GetWink app discovery with swipe-right for Wink and swipe-left for Pass"
             />
 
             <div className="wink-bubble wink-bubble-one" aria-hidden="true">Wink</div>
