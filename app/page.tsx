@@ -115,7 +115,7 @@ export default function HomePage() {
             <span className="section-label light">GetWink intelligence</span>
             <h2>Your taste is personal.<br />Discovery should be too.</h2>
             <p>
-              Profile help, thoughtful conversation starters, and future interest-aware discovery—designed to assist, never impersonate.
+              Profile help, thoughtful conversation starters, and future interest-aware discovery, designed to assist and never impersonate.
             </p>
             <ul>
               <li><ShieldCheck size={18} /> Hard eligibility and safety rules stay deterministic.</li>

@@ -1,2 +1,48 @@
-import { Header } from '../components/Header';import { Footer } from '../components/Footer';
-export default function TermsPage(){return <><Header/><main className="container legal-main"><h1>Terms of Use</h1><p>GetWink is a beta Android dating and social discovery service. These beta terms are a working foundation and should be reviewed before wider public launch.</p><h2>Beta status</h2><p>The product may change, contain bugs, or have limited availability during testing.</p><h2>User conduct</h2><p>Users must be respectful, honest, and legally eligible to use the service. Harassment, spam, scams, impersonation, explicit non-consensual content, and unsafe behavior are not allowed.</p><h2>AI assistant</h2><p>The AI assistant provides suggestions and guidance. It does not send messages for you. You are responsible for messages you choose to send.</p><h2>Future subscriptions</h2><p>GetWink may later introduce paid subscriptions. No final commercial price has been approved in this beta foundation.</p></main><Footer/></>}
+import { Header } from '../components/Header';
+import { Footer } from '../components/Footer';
+
+export default function TermsPage() {
+  return (
+    <>
+      <Header />
+      <main className="legal-main">
+        <header className="legal-hero">
+          <span className="legal-kicker">Terms & Expectations</span>
+          <h1>Terms of Use</h1>
+          <p className="legal-lead">
+            GetWink is a beta Android dating and social discovery service. These terms outline the ground rules for testing our service and keeping our community welcoming.
+          </p>
+        </header>
+
+        <section className="legal-card">
+          <h2>Beta status</h2>
+          <p>
+            GetWink is actively being tested and improved. The app features, interface, or availability may change as we gather feedback and optimize performance during testing.
+          </p>
+        </section>
+
+        <section className="legal-card">
+          <h2>User conduct</h2>
+          <p>
+            Community members must be respectful, honest, and legally eligible to use the service. Harassment, spam, scams, impersonation, explicit non-consensual content, and any unsafe behavior are strictly prohibited on GetWink.
+          </p>
+        </section>
+
+        <section className="legal-card">
+          <h2>AI assistant guidance</h2>
+          <p>
+            The GetWink AI assistant provides profile suggestions and icebreaker ideas to help start authentic conversations. The assistant does not send messages automatically. You remain responsible for all content and messages you send.
+          </p>
+        </section>
+
+        <section className="legal-card">
+          <h2>Future subscriptions</h2>
+          <p>
+            GetWink is currently free during the beta testing period. We may introduce optional premium features or paid subscriptions in the future with clear advance notice.
+          </p>
+        </section>
+      </main>
+      <Footer />
+    </>
+  );
+}
