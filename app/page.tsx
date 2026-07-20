@@ -82,22 +82,34 @@ export default function HomePage() {
 
         <section id="how" className="story-section">
           <div className="story-intro">
-            <span className="section-label">More than another swipe app</span>
-            <h2>A familiar gesture.<br />A smarter feeling.</h2>
-            <p>
-              Hard rules keep discovery safe and eligible. GetWink’s intelligence layer can then learn from the profiles you choose to explore—not just the ones you swipe past.
-            </p>
-            <article className="intro-avatar-card">
-              <img className="intro-avatar-portrait" src="/avatar_liam.jpg" alt="Liam" />
-              <div className="intro-avatar-info">
-                <strong>Liam, 26</strong>
-                <span>Vienna · Coffee & Hiking</span>
-                <span className="intro-avatar-badge">Active Now</span>
+            <div className="story-col-left">
+              <span className="section-label">More than another swipe app</span>
+              <div className="story-male-avatar-container">
+                <img
+                  src="/latino_male_red_tshirt.jpg"
+                  alt="Latino male standing, holding mobile device and typing"
+                  className="story-male-avatar"
+                />
               </div>
-              <div className="intro-avatar-action">
-                <Sparkles size={18} className="intro-action-icon" />
-              </div>
-            </article>
+              <p>
+                Hard rules keep discovery safe and eligible. GetWink’s intelligence layer can then learn from the profiles you choose to explore—not just the ones you swipe past.
+              </p>
+            </div>
+
+            <div className="story-col-right">
+              <h2>A familiar gesture.<br />A smarter feeling.</h2>
+              <article className="intro-avatar-card">
+                <img className="intro-avatar-portrait" src="/avatar_liam.jpg" alt="Liam" />
+                <div className="intro-avatar-info">
+                  <strong>Liam, 26</strong>
+                  <span>Vienna · Coffee & Hiking</span>
+                  <span className="intro-avatar-badge">Active Now</span>
+                </div>
+                <div className="intro-avatar-action">
+                  <Sparkles size={18} className="intro-action-icon" />
+                </div>
+              </article>
+            </div>
           </div>
 
           <div className="signal-row">
@@ -118,14 +130,6 @@ export default function HomePage() {
               <li><ShieldCheck size={18} /> Hard eligibility and safety rules stay deterministic.</li>
               <li><Sparkles size={18} /> AI suggestions require your approval.</li>
             </ul>
-
-            <div className="intelligence-avatar-wrapper">
-              <img
-                src="/latino_male_red_tshirt.jpg"
-                alt="GetWink user standing and typing on smartphone"
-                className="intelligence-male-avatar"
-              />
-            </div>
           </div>
           <div className="profile-stack" aria-label="Example discovery profiles">
             {profiles.map((profile, index) => (
