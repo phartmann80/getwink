@@ -88,14 +88,14 @@ export default function HomePage() {
               Hard rules keep discovery safe and eligible. GetWink’s intelligence layer can then learn from the profiles you choose to explore—not just the ones you swipe past.
             </p>
             <article className="intro-avatar-card">
-              <img className="intro-avatar-portrait" src="/avatar_liam.jpg" alt="Liam" width={54} height={54} />
+              <img className="intro-avatar-portrait" src="/avatar_liam.jpg" alt="Liam" />
               <div className="intro-avatar-info">
                 <strong>Liam, 26</strong>
                 <span>Vienna · Coffee & Hiking</span>
                 <span className="intro-avatar-badge">Active Now</span>
               </div>
               <div className="intro-avatar-action">
-                <span>👋</span>
+                <Sparkles size={18} className="intro-action-icon" />
               </div>
             </article>
           </div>
@@ -118,11 +118,19 @@ export default function HomePage() {
               <li><ShieldCheck size={18} /> Hard eligibility and safety rules stay deterministic.</li>
               <li><Sparkles size={18} /> AI suggestions require your approval.</li>
             </ul>
+
+            <div className="intelligence-avatar-wrapper">
+              <img
+                src="/latino_male_red_tshirt.jpg"
+                alt="GetWink user standing and typing on smartphone"
+                className="intelligence-male-avatar"
+              />
+            </div>
           </div>
           <div className="profile-stack" aria-label="Example discovery profiles">
             {profiles.map((profile, index) => (
               <article className={`stack-card stack-${index + 1} ${profile.tone}`} key={profile.name}>
-                <img className="stack-portrait" src={profile.avatar} alt={profile.name} width={280} height={245} />
+                <img className="stack-portrait" src={profile.avatar} alt={profile.name} />
                 <small>We think you may find</small>
                 <h3>{profile.name}, {profile.age}</h3>
                 <p>{profile.detail}</p>
