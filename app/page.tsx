@@ -82,43 +82,24 @@ export default function HomePage() {
           </a>
         </section>
 
-        <section id="how" className="story-section story-dark">
-          <div className="story-blob story-blob-coral" aria-hidden="true" />
-          <div className="story-blob story-blob-mint" aria-hidden="true" />
-          
-          <div className="story-intro">
-            <div className="story-col-left">
+        <section id="how" className="story-section">
+          <div className="story-split-container">
+            <div className="story-col-left story-gray-block">
               <span className="section-label dark-label">More than another swipe app</span>
-              <div className="story-male-avatar-container">
+              <div className="hand-phone-wrapper">
                 <img
-                  src="/latino_male_standing_transparent.png"
-                  alt="Latino male standing, holding mobile device and typing"
-                  className="story-male-avatar-transparent"
+                  src="/hand_holding_phone.png"
+                  alt="Hand holding smartphone displaying GetWink app"
+                  className="hand-phone-img"
                 />
               </div>
-              <p className="story-dark-subtitle">
+              <p className="story-gray-text">
                 Hard rules keep discovery safe and eligible. GetWink’s intelligence layer can then learn from the profiles you choose to explore—not just the ones you swipe past.
               </p>
             </div>
 
-            <div className="story-col-right">
-              <h2 className="story-dark-title">A familiar gesture.<br />A smarter feeling.</h2>
-              
-              <div className="story-3d-wrapper">
-                <ThreeDHeartAnimation />
-              </div>
-
-              <article className="intro-avatar-card intro-avatar-card-dark">
-                <img className="intro-avatar-portrait" src="/avatar_liam.jpg" alt="Liam" />
-                <div className="intro-avatar-info">
-                  <strong>Liam, 26</strong>
-                  <span>Vienna · Coffee & Hiking</span>
-                  <span className="intro-avatar-badge">Active Now</span>
-                </div>
-                <div className="intro-avatar-action">
-                  <Wink3DCard />
-                </div>
-              </article>
+            <div className="story-col-right story-pink-block">
+              <h2 className="story-pink-title">A familiar gesture.<br />A smarter feeling.</h2>
             </div>
           </div>
 
