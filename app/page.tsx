@@ -2,6 +2,7 @@ import { ArrowDown, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { Wink3DCard } from './components/Wink3DCard';
+import { ThreeDHeartAnimation } from './components/ThreeDHeartAnimation';
 
 const apkUrl = process.env.NEXT_PUBLIC_ANDROID_APK_URL;
 const apkReady = Boolean(
@@ -81,28 +82,33 @@ export default function HomePage() {
           </a>
         </section>
 
-        <section id="how" className="story-section">
+        <section id="how" className="story-section story-dark">
           <div className="story-blob story-blob-coral" aria-hidden="true" />
           <div className="story-blob story-blob-mint" aria-hidden="true" />
           
           <div className="story-intro">
             <div className="story-col-left">
-              <span className="section-label">More than another swipe app</span>
+              <span className="section-label dark-label">More than another swipe app</span>
               <div className="story-male-avatar-container">
                 <img
-                  src="/latino_male_red_tshirt.jpg"
+                  src="/latino_male_standing_transparent.png"
                   alt="Latino male standing, holding mobile device and typing"
-                  className="story-male-avatar"
+                  className="story-male-avatar-transparent"
                 />
               </div>
-              <p>
+              <p className="story-dark-subtitle">
                 Hard rules keep discovery safe and eligible. GetWink’s intelligence layer can then learn from the profiles you choose to explore—not just the ones you swipe past.
               </p>
             </div>
 
             <div className="story-col-right">
-              <h2>A familiar gesture.<br />A smarter feeling.</h2>
-              <article className="intro-avatar-card">
+              <h2 className="story-dark-title">A familiar gesture.<br />A smarter feeling.</h2>
+              
+              <div className="story-3d-wrapper">
+                <ThreeDHeartAnimation />
+              </div>
+
+              <article className="intro-avatar-card intro-avatar-card-dark">
                 <img className="intro-avatar-portrait" src="/avatar_liam.jpg" alt="Liam" />
                 <div className="intro-avatar-info">
                   <strong>Liam, 26</strong>
