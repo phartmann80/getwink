@@ -1,0 +1,12 @@
+import { createClient } from '@supabase/supabase-js';
+import Constants from 'expo-constants';
+import * as SecureStore from 'expo-secure-store';
+import { AppState, Platform } from 'react-native';
+import 'react-native-url-polyfill/auto';
+type Extra={supabaseUrl?:string;supabaseAnonKey?:string;apiBaseUrl?:string};
+const extra=(Constants.expoConfig?.extra??{}) as Extra;
+if(!extra.supabaseUrl||!extra.supabaseAnonKey) throw new Error('Missing EXPO_PUBLIC Supabase configuration');
+export const apiBaseUrl=(extra.apiBaseUrl||'https://www.getwink.app').replace(/\/$/,'');
+const storage={getItem:(key:string)=>SecureStore.getItemAsync(key),setItem:(key:string,value:string)=>SecureStore.setItemAsync(key,value,{keychainAccessible:SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY}),removeItem:(key:string)=>SecureStore.deleteItemAsync(key)};
+export const supabase=createClient(extra.supabaseUrl,extra.supabaseAnonKey,{auth:{storage,autoRefreshToken:true,persistSession:true,detectSessionInUrl:false}});
+if(Platform.OS!=='web')AppState.addEventListener('change',state=>state==='active'?supabase.auth.startAutoRefresh():supabase.auth.stopAutoRefresh());

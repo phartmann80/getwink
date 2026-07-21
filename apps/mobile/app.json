@@ -1,1 +1,0 @@
-{"expo":{"name":"GetWink","slug":"getwink","scheme":"getwink","version":"0.1.0","orientation":"portrait","icon":"./assets/logo.png","userInterfaceStyle":"light","assetBundlePatterns":["**/*"],"android":{"package":"app.getwink.beta","adaptiveIcon":{"foregroundImage":"./assets/logo.png","backgroundColor":"#FFF8EF"}},"extra":{"eas":{"projectId":"replace-after-eas-init"}}}}

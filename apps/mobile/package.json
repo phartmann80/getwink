@@ -1,23 +1,30 @@
 {
   "name": "getwink-mobile",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "private": true,
   "main": "expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
-    "build:android-preview": "eas build --platform android --profile preview"
+    "typecheck": "tsc --noEmit",
+    "doctor": "npx expo-doctor",
+    "build:android:preview": "eas build --platform android --profile preview",
+    "build:android:production": "eas build --platform android --profile production"
   },
   "dependencies": {
-    "@supabase/supabase-js": "latest",
-    "expo": "latest",
-    "expo-image-picker": "latest",
-    "expo-status-bar": "latest",
-    "react": "latest",
-    "react-native": "latest",
-    "react-native-gesture-handler": "latest",
-    "react-native-reanimated": "latest",
-    "react-native-safe-area-context": "latest"
+    "@supabase/supabase-js": "^2.57.4",
+    "expo": "~55.0.0",
+    "expo-constants": "~55.0.17",
+    "expo-image-picker": "~55.0.22",
+    "expo-secure-store": "~55.0.16",
+    "expo-status-bar": "~55.0.6",
+    "react": "19.2.0",
+    "react-native": "0.83.6",
+    "react-native-safe-area-context": "~5.6.2",
+    "react-native-url-polyfill": "^2.0.0"
   },
-  "devDependencies": { "@babel/core": "latest", "@types/react": "latest", "typescript": "latest" }
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "typescript": "~5.9.2"
+  }
 }
