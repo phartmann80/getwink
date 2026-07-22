@@ -4,6 +4,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: 'GetWink',
   slug: 'getwink',
   scheme: 'getwink',
+  owner: 'janpaul80',
   version: '0.3.0',
   orientation: 'portrait',
   icon: './assets/logo.png',
@@ -24,7 +25,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   extra: {
     supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
     supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
-    apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL || 'https://www.getwink.app',
-    eas: { projectId: process.env.EAS_PROJECT_ID }
-  }
+    apiBaseUrl:
+      process.env.EXPO_PUBLIC_API_BASE_URL || 'https://www.getwink.app',
+    eas: {
+      projectId: '038749ac-763a-4af9-bb43-9f725be4711c',
+    },
+  },
 });
