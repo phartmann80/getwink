@@ -19,7 +19,7 @@
     "expo-secure-store": "~55.0.16",
     "expo-status-bar": "~55.0.6",
     "react": "19.2.0",
-    "react-native": "0.83.6",
+    "react-native": "0.83.10",
     "react-native-safe-area-context": "~5.6.2",
     "react-native-url-polyfill": "^2.0.0"
   },
