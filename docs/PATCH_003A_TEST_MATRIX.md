@@ -25,6 +25,23 @@ migrations are applied to a staging project.
 | Re-save (edit) | Change the photo later | Still exactly one `profile_photos` row for the user; old storage object removed only after the new upload + row succeed |
 | Retry after failure | Simulate a failed row upsert after a successful upload | Previous photo/row untouched; user never left without a photo |
 
+## Profile-photos storage policies (migration 0004) **[staging]**
+
+Requires migration `0004_profile_photos_storage_policies.sql` applied to the
+staging bucket first. Live production `profile-photos` currently has zero
+policies, so this feature has never actually run against enforcement.
+
+| Area | Verification | Expected |
+|---|---|---|
+| Own upload | User A uploads to `<A-uid>/test.jpg` | Succeeds |
+| Own read | User A generates a signed URL for their own object | Succeeds |
+| Own delete | User A removes their own object | Succeeds |
+| Cross-user write | User A attempts upload/delete to `<B-uid>/...` | Rejected |
+| Cross-user read, visible | User A generates a signed URL for User B's photo, B active/onboarded/not blocked | Succeeds (Discover/Matches depend on this) |
+| Cross-user read, blocked | Same as above after A blocks B (or B blocks A) | Rejected |
+| Size limit | Upload > 5 MB | Rejected by bucket config |
+| MIME restriction | Upload a non-image or disallowed image type (e.g. `application/pdf`, `image/gif`) | Rejected by bucket config |
+
 ## Email confirmation deep link **[staging]**
 
 | Area | Verification | Expected |
