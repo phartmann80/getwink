@@ -17,11 +17,9 @@ export async function saveProfile(input:{displayName:string;gender:Gender;bio:st
     const previous=await supabase.from('profile_photos').select('id,storage_path').eq('user_id',id).order('sort_order').limit(1).maybeSingle();
     check(previous.error);
     const blob=await(await fetch(input.photoUri)).blob();
-    console.log('[diag-photo] blob size/type',blob.size,blob.type);
     if(blob.size>10*1024*1024)throw new Error('Photo must be smaller than 10 MB');
     const path=`${id}/${Date.now()}.jpg`;
     const upload=await supabase.storage.from('profile-photos').upload(path,blob,{contentType:blob.type||'image/jpeg'});
-    if(upload.error)console.log('[diag-photo] upload error',JSON.stringify({message:upload.error.message,name:(upload.error as any).name,status:(upload.error as any).statusCode||(upload.error as any).status,cause:String((upload.error as any).cause||'')}));
     check(upload.error);
     const photoRow:{id?:string;user_id:string;storage_path:string;sort_order:number}={user_id:id,storage_path:path,sort_order:0};
     if(previous.data?.id)photoRow.id=previous.data.id;
