@@ -57,7 +57,7 @@ Confirmed via Management API read-back that `site_url` and `uri_allow_list` are 
 | Release candidate | `3f9b1227-766d-48f8-900c-7daeea69dd41` | Built before the photo-upload fix landed; superseded, do not use for final acceptance | Production Supabase |
 | STAGING-QA v1 | `0ab7f76e-cf98-4005-bcd8-fb4d6117498c` | First device-QA build; found the photo-upload defect | `getwink-staging` |
 | STAGING-QA diagnostic | `9564e352-8fa3-4c02-96de-2a4614bc8fb7` | Temporary, carried the diagnostic logging commit (`9a34077`, now reverted); never distributed, superseded | `getwink-staging` |
-| STAGING-QA v2 (current) | see below | Contains the photo-upload fix (`85f0de5`); this is the build for Paul's device checklist | `getwink-staging` |
+| STAGING-QA v2 (current) | `8ccd3f90-ba7b-43db-b761-77a0a0d64462` | Contains the photo-upload fix (`85f0de5`); this is the build for Paul's device checklist | `getwink-staging` |
 
 All STAGING-QA builds are internal-distribution, staging-pointed, and were never linked from any download surface — **never distribute**. All were built via an uncommitted local `eas.json` profile override (staging URL/anon key inline), reverted immediately after each build consumed it; `apps/mobile/eas.json` on the branch has never carried a staging-pointing profile.
 

@@ -8,7 +8,7 @@ FAIL and note which row it was.
 build page. **Do not share this link or forward the APK to anyone else** —
 it's a test build pointed at a throwaway staging database, not production.
 
-> Install link: _(filled in once the build finishes)_
+> Install link: https://expo.dev/accounts/janpaul80/projects/getwink/builds/8ccd3f90-ba7b-43db-b761-77a0a0d64462
 
 **Two test accounts already exist and are ready to use** — you don't need to
 create new ones:
