@@ -1,3 +1,4 @@
+import { File } from 'expo-file-system';
 import { apiBaseUrl, supabase } from './supabase';
 import type { Candidate, ChatMessage, Gender, MatchCard, Profile } from './types';
 const check=(error:{message:string}|null)=>{if(error)throw new Error(error.message)};
@@ -16,10 +17,11 @@ export async function saveProfile(input:{displayName:string;gender:Gender;bio:st
   if(input.photoUri){
     const previous=await supabase.from('profile_photos').select('id,storage_path').eq('user_id',id).order('sort_order').limit(1).maybeSingle();
     check(previous.error);
-    const blob=await(await fetch(input.photoUri)).blob();
-    if(blob.size>10*1024*1024)throw new Error('Photo must be smaller than 10 MB');
+    const photoFile=new File(input.photoUri);
+    if(photoFile.size>5*1024*1024)throw new Error('Photo must be smaller than 5 MB');
+    const bytes=await photoFile.arrayBuffer();
     const path=`${id}/${Date.now()}.jpg`;
-    const upload=await supabase.storage.from('profile-photos').upload(path,blob,{contentType:blob.type||'image/jpeg'});
+    const upload=await supabase.storage.from('profile-photos').upload(path,bytes,{contentType:'image/jpeg'});
     check(upload.error);
     const photoRow:{id?:string;user_id:string;storage_path:string;sort_order:number}={user_id:id,storage_path:path,sort_order:0};
     if(previous.data?.id)photoRow.id=previous.data.id;
