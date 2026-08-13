@@ -16,3 +16,4 @@ apps/mobile/ios
 .vercel
 .env*
 *.tsbuildinfo
+supabase/.temp

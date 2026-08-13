@@ -1,12 +1,42 @@
+import { File } from 'expo-file-system';
 import { apiBaseUrl, supabase } from './supabase';
 import type { Candidate, ChatMessage, Gender, MatchCard, Profile } from './types';
 const check=(error:{message:string}|null)=>{if(error)throw new Error(error.message)};
 async function userId(){const{data,error}=await supabase.auth.getUser();check(error);if(!data.user)throw new Error('Sign in required');return data.user.id}
 export async function signIn(email:string,password:string){const{error}=await supabase.auth.signInWithPassword({email:email.trim(),password});check(error)}
-export async function signUp(email:string,password:string){const{data,error}=await supabase.auth.signUp({email:email.trim(),password});check(error);return Boolean(data.session)}
+export async function signUp(email:string,password:string){const{data,error}=await supabase.auth.signUp({email:email.trim(),password,options:{emailRedirectTo:'getwink://auth/callback'}});check(error);return Boolean(data.session)}
+export async function resendConfirmation(email:string){const{error}=await supabase.auth.resend({type:'signup',email:email.trim()});check(error)}
 export async function signOut(){const{error}=await supabase.auth.signOut();check(error)}
 export async function ownProfile():Promise<Profile|null>{const id=await userId();const{data,error}=await supabase.from('profiles').select('id,display_name,gender,bio,birthdate,city,country,onboarding_completed_at').eq('id',id).maybeSingle();check(error);return data as Profile|null}
-export async function saveProfile(input:{displayName:string;gender:Gender;bio:string;birthdate:string;city:string;country:string;interestedIn:Gender[];photoUri?:string}){const id=await userId();let r=await supabase.from('profiles').upsert({id,display_name:input.displayName.trim(),gender:input.gender,bio:input.bio.trim(),birthdate:input.birthdate,city:input.city.trim()||null,country:input.country.trim()||null},{onConflict:'id'});check(r.error);r=await supabase.from('profile_preferences').upsert({user_id:id,interested_in:input.interestedIn,min_age:18,max_age:80},{onConflict:'user_id'});check(r.error);if(input.photoUri){const blob=await(await fetch(input.photoUri)).blob();if(blob.size>10*1024*1024)throw new Error('Photo must be smaller than 10 MB');const path=`${id}/${Date.now()}.jpg`;const upload=await supabase.storage.from('profile-photos').upload(path,blob,{contentType:blob.type||'image/jpeg'});check(upload.error);const photo=await supabase.from('profile_photos').insert({user_id:id,storage_path:path,sort_order:0});check(photo.error)}const done=await supabase.rpc('complete_profile_if_ready',{p_user_id:id});check(done.error);const row=Array.isArray(done.data)?done.data[0]:done.data;if(!row?.profile_complete)throw new Error('Complete every required field and add a photo');return row}
+export async function saveProfile(input:{displayName:string;gender:Gender;bio:string;birthdate:string;city:string;country:string;interestedIn:Gender[];photoUri?:string}){
+  const id=await userId();
+  let r=await supabase.from('profiles').upsert({id,display_name:input.displayName.trim(),gender:input.gender,bio:input.bio.trim(),birthdate:input.birthdate,city:input.city.trim()||null,country:input.country.trim()||null},{onConflict:'id'});
+  check(r.error);
+  const prefs=await supabase.rpc('save_profile_preferences',{p_interested_in:input.interestedIn,p_min_age:18,p_max_age:80});
+  check(prefs.error);
+  if(input.photoUri){
+    const previous=await supabase.from('profile_photos').select('id,storage_path').eq('user_id',id).order('sort_order').limit(1).maybeSingle();
+    check(previous.error);
+    const photoFile=new File(input.photoUri);
+    if(photoFile.size>5*1024*1024)throw new Error('Photo must be smaller than 5 MB');
+    const bytes=await photoFile.arrayBuffer();
+    const path=`${id}/${Date.now()}.jpg`;
+    const upload=await supabase.storage.from('profile-photos').upload(path,bytes,{contentType:'image/jpeg'});
+    check(upload.error);
+    const photoRow:{id?:string;user_id:string;storage_path:string;sort_order:number}={user_id:id,storage_path:path,sort_order:0};
+    if(previous.data?.id)photoRow.id=previous.data.id;
+    const photo=await supabase.from('profile_photos').upsert(photoRow,{onConflict:'id'});
+    check(photo.error);
+    // Only remove the old object once the new upload and row are confirmed, so a failed
+    // save never leaves the user without any photo.
+    if(previous.data&&previous.data.storage_path!==path)await supabase.storage.from('profile-photos').remove([previous.data.storage_path]);
+  }
+  const done=await supabase.rpc('complete_profile_if_ready',{p_user_id:id});
+  check(done.error);
+  const row=Array.isArray(done.data)?done.data[0]:done.data;
+  if(!row?.profile_complete)throw new Error('Complete every required field and add a photo');
+  return row;
+}
 async function photo(user:string){const{data,error}=await supabase.from('profile_photos').select('storage_path').eq('user_id',user).order('sort_order').limit(1).maybeSingle();check(error);if(!data?.storage_path)return null;return (await supabase.storage.from('profile-photos').createSignedUrl(data.storage_path,3600)).data?.signedUrl??null}
 export async function candidates():Promise<Candidate[]>{const me=await userId();const acted=await supabase.from('discovery_actions').select('target_user_id').eq('actor_user_id',me);check(acted.error);const excluded=new Set([me,...(acted.data??[]).map(x=>x.target_user_id)]);const result=await supabase.from('discovery_candidate_profiles').select('id,display_name,gender,bio,city,country').limit(30);check(result.error);return Promise.all((result.data??[]).filter(x=>!excluded.has(x.id)).map(async x=>({...x,photoUrl:await photo(x.id)}))) as Promise<Candidate[]>}
 export async function act(target:string,action:'wink'|'pass'){const{data,error}=await supabase.rpc('record_discovery_action',{p_target_user_id:target,p_action:action});check(error);return Array.isArray(data)?data[0]:data}
