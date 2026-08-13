@@ -4,11 +4,11 @@ This is a step-by-step script, no development experience required. Each row
 says exactly what to tap and what you should see. Take a screenshot on any
 FAIL and note which row it was.
 
-**Build to install:** STAGING-QA v2 — link below, or scan the QR code on the
+**Build to install:** STAGING-QA v4 — link below, or scan the QR code on the
 build page. **Do not share this link or forward the APK to anyone else** —
 it's a test build pointed at a throwaway staging database, not production.
 
-> Install link: https://expo.dev/accounts/janpaul80/projects/getwink/builds/8ccd3f90-ba7b-43db-b761-77a0a0d64462
+> Install link: https://expo.dev/accounts/janpaul80/projects/getwink/builds/cd1240f6-33e5-47e1-9dbd-5b2ec750de59
 
 **Two test accounts already exist and are ready to use** — you don't need to
 create new ones:
@@ -23,6 +23,19 @@ Both are pre-confirmed, so you can sign in directly with "Sign in" (not
 
 ---
 
+## 0b. Email confirmation timeout (NEW — tests the fix)
+
+This tests the new 30-second timeout on the email confirmation screen.
+
+1. Sign out if you're signed in.
+2. Create a new beta account with a valid email.
+3. After signing up, you'll see a "Confirming your email..." screen.
+4. **Do nothing** — wait 30 seconds.
+5. After 30 seconds, the screen should change to show:
+   "This is taking too long — try again or resend" with a **Back to sign in** button.
+   - **PASS**: timeout message appears within ~30s, button works.
+   - **FAIL**: screen stays on "Confirming your email..." indefinitely.
+
 ## 1. Onboarding photo fix (re-verify)
 
 This is the row that failed before the fix — the most important one to
@@ -35,6 +48,19 @@ re-check first.
    - **PASS**: you land on the Discover screen (a card-based browsing view),
      no error dialog.
    - **FAIL**: a "Could not save" dialog appears. Screenshot it.
+
+## 1b. Preference selector (NEW — tests the fix)
+
+This tests the new preference selector added in the latest build.
+
+1. If you already completed onboarding in section 1, go to **Profile → Edit profile**.
+2. You should see a new "I'm interested in:" row with selectable chips:
+   **Woman**, **Man**, **Non-binary**, **Other**.
+3. Tap to select/deselect different combinations. At least one must be selected.
+4. Tap **Complete profile**.
+   - **PASS**: saves without error, returns to Home.
+5. Go back to **Edit profile** — your previous selections should be remembered.
+   - **PASS**: the chips you selected are still highlighted.
 
 ## 2. Preference-save idempotency
 
