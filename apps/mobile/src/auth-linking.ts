@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Linking } from 'react-native';
 import { supabase } from './supabase';
 
@@ -25,13 +25,23 @@ async function exchange(url: string, setStatus: (status: ConfirmationLinkStatus)
 
 export function useAuthLinking() {
   const [status, setStatus] = useState<ConfirmationLinkStatus>('idle');
+  const exchangingRef = useRef(false);
   useEffect(() => {
     let active = true;
+    const doExchange = async (url: string) => {
+      if (exchangingRef.current) return;
+      exchangingRef.current = true;
+      try {
+        await exchange(url, (s) => { if (active) setStatus(s); });
+      } finally {
+        exchangingRef.current = false;
+      }
+    };
     Linking.getInitialURL().then(url => {
-      if (active && url && isAuthCallback(url)) void exchange(url, setStatus);
+      if (active && url && isAuthCallback(url)) void doExchange(url);
     });
     const subscription = Linking.addEventListener('url', ({ url }) => {
-      if (isAuthCallback(url)) void exchange(url, setStatus);
+      if (isAuthCallback(url)) void doExchange(url);
     });
     return () => {
       active = false;
