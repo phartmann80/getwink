@@ -1,0 +1,10 @@
+{
+  "name": "GetWink",
+  "install": "npm ci && npm --prefix apps/mobile ci",
+  "terminals": [
+    {
+      "name": "web-dev",
+      "command": "npm run dev"
+    }
+  ]
+}
