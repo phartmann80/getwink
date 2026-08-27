@@ -266,13 +266,59 @@ Production is **down** (Vercel `402 DEPLOYMENT_DISABLED`), so cutover is P0 rest
 **left dormant** (parked/disabled for possible future reactivation) — not decommissioned, not an
 active deploy target.
 
-**Server:** Strato, Ubuntu 24.04, 12 cores / 48 GB / 720 GB (activation pending). Deploy SSH public
-key (ed25519) fingerprint `SHA256:0NyW7T8QTbHrd8SDOTjOMuiNCAAqA0GML+R30Xb5Ivo`.
+**Server:** Strato, Ubuntu 24.04, 12 cores / 48 GB / 720 GB (activation pending).
+
+**SSH key custody (ruling 2026-08-27): Paul self-generates.** The VM-generated deploy
+keypair is **VOID** and must never be authorized on the server or stored as GitHub
+`SSH_KEY`. Void fingerprint (do not authorize):
+
+```
+SHA256:0NyW7T8QTbHrd8SDOTjOMuiNCAAqA0GML+R30Xb5Ivo
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMqdKNB3g3zNRw2ckeYqEAex6YWRp1jErPcgTPh+C+ag getwink-deploy
+```
+
+Paul generates the live keypair on his machine, authorizes **his** public key on the
+`deploy` user, and pastes **his** private key into the `SSH_KEY` GitHub secret:
+
+```
+ssh-keygen -t ed25519 -C getwink-deploy -f getwink_deploy -N ''
+```
+
+**provision.sh (real run):** invoke as the `deploy` user with
+`CERTBOT_EMAIL=ops@getwink.app` so Let's Encrypt expiry mail goes to a real inbox.
+`getwink.app` has IONOS MX (`mx00.ionos.de` / `mx01.ionos.de`), so `@getwink.app`
+can receive mail **if** the mailbox exists. This agent cannot confirm
+`ops@getwink.app` is created and monitored. Paul: confirm or create that mailbox
+(or a forwarder) in IONOS before provision, **or** set `CERTBOT_EMAIL` to the
+address he actually reads (`jp@jphart.de` / `ph@klaw.at`). Do not rely on an
+unmonitored `admin@getwink.app`.
 
 **Locked cutover order** — on arrival of SSH access, DNS (apex + www), and runtime env values:
-`provision.sh` → **hard-delete the test user via admin API** (record confirmation here) → first
+`provision.sh` (as `deploy`, with `CERTBOT_EMAIL`) → **hard-delete the test user via admin API** (record confirmation here) → first
 deploy strictly via the GH Action → APK to `/srv/getwink/download/beta.apk` → verify
 `https://www.getwink.app/download/beta.apk` 200 + MIME + attachment → flip
 `NEXT_PUBLIC_ANDROID_APK_URL`, redeploy, CTA live → full verification suite (routes, health contract,
 apex→www 301 on 80+443, 22-test security regression, device API smoke item 5 re-run against restored
 production, client-bundle secret scan, ignore-flag check) → final walkthrough with runbook + rollback.
+
+## P3.9 Void VM deploy key — deletion confirmation (2026-08-27)
+
+Ruling accepted: a deploy credential whose private half was born on a disposable VM
+is not acceptable custody. Deletion and scan on this follow-up agent VM
+(`bc-395294d5-f8f3-4c59-a691-415715e4f5df`, a **new** VM — the generating agent
+`bc-e1f97fe4-a6f8-4e9e-a719-e3b3eba94568` is idle/ephemeral):
+
+| Check | Result |
+|---|---|
+| `ls /tmp/deploykey` before `rm` | No such file or directory (this VM never held the pair) |
+| `rm -rf /tmp/deploykey` | Executed |
+| `test ! -e /tmp/deploykey` | OK |
+| Filesystem scan for `deploykey` / `getwink_deploy` | No copies |
+| Private key in this workspace / `/tmp` | Not present |
+
+The generating VM is disposable; its `/tmp/deploykey/getwink_deploy` died with that
+filesystem. Nobody should authorize `SHA256:0NyW7T8QTbHrd8SDOTjOMuiNCAAqA0GML+R30Xb5Ivo`
+later by mistake — it is void.
+
+**Standing by** for Strato activation and Paul's access package (his self-generated
+key, DNS, GH secrets, runtime env). Cutover order unchanged.

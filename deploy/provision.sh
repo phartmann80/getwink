@@ -12,9 +12,10 @@
 # HTTP bootstrap site serving the ACME path, and exits 0 so you can re-run it
 # once DNS propagates.
 #
-# Usage (either works):
-#   CERTBOT_EMAIL=you@example.com bash deploy/provision.sh        # as the sudo-capable deploy user
-#   sudo CERTBOT_EMAIL=you@example.com bash deploy/provision.sh   # as root
+# Usage (either works). Real run: as the deploy user with CERTBOT_EMAIL set to a
+# monitored inbox (ops@getwink.app once that mailbox exists in IONOS):
+#   CERTBOT_EMAIL=ops@getwink.app bash deploy/provision.sh        # as the sudo-capable deploy user
+#   sudo CERTBOT_EMAIL=ops@getwink.app bash deploy/provision.sh   # as root
 set -euo pipefail
 
 log() { echo "[provision] $*"; }
@@ -29,7 +30,7 @@ fi
 
 DOMAIN="getwink.app"
 WWW="www.getwink.app"
-CERTBOT_EMAIL="${CERTBOT_EMAIL:-admin@getwink.app}"
+CERTBOT_EMAIL="${CERTBOT_EMAIL:-ops@getwink.app}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # The human who invoked sudo (so `docker` group membership lands on the deploy
 # user, not root). Falls back to root when run directly as root.

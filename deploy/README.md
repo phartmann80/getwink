@@ -19,18 +19,32 @@ shown as `<configured>`.
 Production is currently **down** (Vercel `402 DEPLOYMENT_DISABLED`), so this is a P0
 restoration. Order matters — especially **DNS before certbot**:
 
-1. [ ] Server reachable over SSH; deploy user has sudo.
+1. [ ] Server reachable over SSH; deploy user has sudo. SSH password auth disabled.
+       **Key custody:** Paul generates the deploy keypair **on his own machine** (never on an
+       agent VM). Authorize **his** public key on the `deploy` user; paste **his** private
+       key into GitHub `SSH_KEY`:
+       ```bash
+       ssh-keygen -t ed25519 -C getwink-deploy -f getwink_deploy -N ''
+       ```
+       **VOID — never authorize** fingerprint
+       `SHA256:0NyW7T8QTbHrd8SDOTjOMuiNCAAqA0GML+R30Xb5Ivo`
+       (`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMqdKNB3g3zNRw2ckeYqEAex6YWRp1jErPcgTPh+C+ag getwink-deploy`).
+       That pair was generated on a disposable VM and has been deleted.
 2. [ ] **DNS** `A`/`AAAA` for **both** `getwink.app` AND `www.getwink.app` point at the server.
        Verify: `dig +short getwink.app` and `dig +short www.getwink.app` return the server IP.
        *(certbot's HTTP-01 challenge fails until this is true.)*
-3. [ ] GitHub secrets set: `SSH_HOST`, `SSH_USER`, `SSH_KEY`, `NEXT_PUBLIC_SUPABASE_URL`,
+3. [ ] GitHub secrets set: `SSH_HOST`, `SSH_USER=deploy`, `SSH_KEY` (Paul's private key),
+       `NEXT_PUBLIC_SUPABASE_URL`,
        `NEXT_PUBLIC_SUPABASE_ANON_KEY`; variable `NEXT_PUBLIC_ANDROID_APK_URL` (empty for now).
-4. [ ] Run the provision script (idempotent) — installs Docker/nginx/certbot, creates dirs,
+4. [ ] Run the provision script **as the `deploy` user** (idempotent) — installs Docker/nginx/certbot, creates dirs,
        installs the systemd unit, issues the cert, applies the nginx config:
        ```bash
-       sudo CERTBOT_EMAIL=<ops-email> bash deploy/provision.sh
+       CERTBOT_EMAIL=ops@getwink.app bash deploy/provision.sh
        ```
-       If DNS is not ready it provisions everything else and exits; just re-run after propagation.
+       Confirm `ops@getwink.app` exists and is monitored in IONOS (domain MX is
+       `mx00.ionos.de` / `mx01.ionos.de`) **before** this run, or set `CERTBOT_EMAIL`
+       to a mailbox Paul actually reads. If DNS is not ready it provisions everything
+       else and exits; just re-run after propagation.
 5. [ ] Fill `/etc/getwink/getwink.env` from `getwink.env.example` (chmod 600; never commit).
 6. [ ] First deploy **only via the GitHub Action** (merge to `main` / `workflow_dispatch`) so the
        pipeline proves itself. Do not hand-run `docker compose up` for the first release.
@@ -40,7 +54,7 @@ restoration. Order matters — especially **DNS before certbot**:
 
 ## 2. CI/CD secrets (GitHub → Settings → Secrets and variables → Actions)
 
-Secrets: `SSH_HOST`, `SSH_USER`, `SSH_KEY` (deploy private key),
+Secrets: `SSH_HOST`, `SSH_USER` (`deploy`), `SSH_KEY` (Paul's self-generated deploy private key — never the voided VM key),
 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 Variables: `NEXT_PUBLIC_ANDROID_APK_URL` (empty until the APK is live, then
 `https://www.getwink.app/download/beta.apk`).
