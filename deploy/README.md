@@ -12,33 +12,29 @@ for this project** — no Vercel deploys or previews.
 All secrets are provided out-of-band and never committed. Placeholders below are
 shown as `<configured>`.
 
-## 1. One-time server provisioning
+## 0. Cutover pre-flight checklist (do in this order)
 
-Prereqs: DNS `A`/`AAAA` for `getwink.app` AND `www.getwink.app` point at the
-server; Docker Engine + compose plugin, nginx, and certbot installed.
+Production is currently **down** (Vercel `402 DEPLOYMENT_DISABLED`), so this is a P0
+restoration. Order matters — especially **DNS before certbot**:
 
-```bash
-sudo mkdir -p /srv/getwink/download /etc/getwink /var/www/certbot
-sudo install -m 600 /dev/null /etc/getwink/getwink.env   # then fill from getwink.env.example
+1. [ ] Server reachable over SSH; deploy user has sudo.
+2. [ ] **DNS** `A`/`AAAA` for **both** `getwink.app` AND `www.getwink.app` point at the server.
+       Verify: `dig +short getwink.app` and `dig +short www.getwink.app` return the server IP.
+       *(certbot's HTTP-01 challenge fails until this is true.)*
+3. [ ] GitHub secrets set: `SSH_HOST`, `SSH_USER`, `SSH_KEY`, `NEXT_PUBLIC_SUPABASE_URL`,
+       `NEXT_PUBLIC_SUPABASE_ANON_KEY`; variable `NEXT_PUBLIC_ANDROID_APK_URL` (empty for now).
+4. [ ] Run the provision script (idempotent) — installs Docker/nginx/certbot, creates dirs,
+       installs the systemd unit, issues the cert, applies the nginx config:
+       ```bash
+       sudo CERTBOT_EMAIL=<ops-email> bash deploy/provision.sh
+       ```
+       If DNS is not ready it provisions everything else and exits; just re-run after propagation.
+5. [ ] Fill `/etc/getwink/getwink.env` from `getwink.env.example` (chmod 600; never commit).
+6. [ ] First deploy **only via the GitHub Action** (merge to `main` / `workflow_dispatch`) so the
+       pipeline proves itself. Do not hand-run `docker compose up` for the first release.
+7. [ ] Upload the signed APK (§4), flip the CTA (§4), then run the full verification suite (§6).
 
-# TLS (single cert lineage 'getwink.app' covering both names):
-sudo certbot certonly --webroot -w /var/www/certbot \
-  -d getwink.app -d www.getwink.app
-# certbot installs a systemd renew timer automatically; verify:
-systemctl list-timers | grep certbot
-
-# nginx site:
-sudo cp deploy/nginx/getwink.conf /etc/nginx/sites-available/getwink.conf
-sudo ln -sf /etc/nginx/sites-available/getwink.conf /etc/nginx/sites-enabled/getwink.conf
-sudo nginx -t && sudo systemctl reload nginx
-
-# compose + systemd:
-sudo cp deploy/compose.yml /srv/getwink/compose.yml
-sudo cp deploy/getwink.service /etc/systemd/system/getwink.service
-sudo systemctl daemon-reload && sudo systemctl enable --now getwink.service
-```
-
-The deploy user needs Docker access and write access to `/srv/getwink`.
+`certbot` installs its own systemd renew timer; verify with `systemctl list-timers | grep certbot`.
 
 ## 2. CI/CD secrets (GitHub → Settings → Secrets and variables → Actions)
 
@@ -81,21 +77,47 @@ GETWINK_IMAGE=ghcr.io/phartmann80/getwink:sha-<previoussha> \
 curl -s https://www.getwink.app/api/health
 ```
 
-Prune conservatively (retain the last few tags):
-`docker image ls ...` then remove only images older than the 3 most recent.
+Old images are pruned automatically by the deploy workflow (keeps the 3 most recent image IDs),
+so a rollback target is always on the box.
 
-## 6. Post-cutover verification
+## 6. Post-cutover verification (run top to bottom; minutes, not hours)
 
 ```bash
+# 6.1 Routes (expect 200 each)
 for p in / /privacy /terms /safety; do
   curl -s -o /dev/null -w "www$p -> %{http_code}\n" https://www.getwink.app$p
 done
-curl -sI https://www.getwink.app/api/health          # 200 JSON, Cache-Control: no-store
-curl -sI http://getwink.app/  | grep -i location      # 301 -> https://www.getwink.app/
-curl -sI https://getwink.app/ | grep -i location      # 301 -> https://www.getwink.app/
+
+# 6.2 Health contract (expect 200, application/json, Cache-Control: no-store; POST 405 + Allow: GET)
+curl -sS -D - -o /dev/null https://www.getwink.app/api/health | grep -iE '^HTTP/|content-type|cache-control'
+curl -sS -o /dev/null -w "POST /api/health -> %{http_code}\n" -X POST https://www.getwink.app/api/health
+
+# 6.3 Canonical apex -> www 301 on BOTH 80 and 443
+curl -sI http://getwink.app/       | grep -iE '^HTTP/|^location'   # 301 -> https://www.getwink.app/
+curl -sI https://getwink.app/      | grep -iE '^HTTP/|^location'   # 301 -> https://www.getwink.app/
+
+# 6.4 Beta APK: 200 + correct MIME + attachment disposition
+curl -sI https://www.getwink.app/download/beta.apk \
+  | grep -iE '^HTTP/|content-type|content-disposition'
+#   expect: 200 ; application/vnd.android.package-archive ; attachment; filename="getwink-beta.apk"
+
+# 6.5 No server secrets in the served client bundle
+mkdir -p /tmp/verify && cd /tmp/verify
+for u in $(curl -s https://www.getwink.app/ | grep -oE '/_next/static/[^"]+\.js' | sort -u); do
+  curl -s "https://www.getwink.app$u"
+done | grep -E 'SUPABASE_ROLE_KEY|LANGDOCK_API_CODE|LANGDOCK_ENDPOINT_URL' \
+  && echo '!!! SECRET LEAK' || echo 'client bundle clean: no server secrets'
+
+# 6.6 22-test security regression (server-side; needs the real Supabase env on the box)
+#   docker exec getwink-web sh -c 'node ...'  OR run in CI with the preview env:
+npx tsx lib/mastra/run-mastra-auth-tests.ts   # expect "22 PASSED, 0 FAILED"
+
+# 6.7 next.config has no build-error-ignore flags
+grep -nE 'ignoreBuildErrors|ignoreDuringBuilds' next.config.ts && echo '!!! flag present' || echo 'no ignore flags'
 ```
 
-Also confirm no server secrets appear in client bundles
-(`.next/static`/served JS should contain no `SUPABASE_ROLE_KEY`/`LANGDOCK_*`/`MODEL`),
-and that no build-error-ignore flags exist (`next.config.ts` has no
-`eslint.ignoreDuringBuilds` / `typescript.ignoreBuildErrors`).
+6.8 Re-run the device API smoke item (§ smoke-test, item 5) against restored production: with a
+fresh email-confirmed throwaway account, the app's Wingmate call to
+`https://www.getwink.app/api/ai/chat` must return 200 (not 402). Clean up that account afterward
+(rotate password + global logout now; hard-delete once `SUPABASE_ROLE_KEY` is on the box:
+`curl -sS -X DELETE "$SUPABASE_URL/auth/v1/admin/users/<id>" -H "apikey: $SUPABASE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_ROLE_KEY"`).
