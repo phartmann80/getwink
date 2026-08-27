@@ -1,8 +1,6 @@
 import { ArrowDown, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
-import { Wink3DCard } from './components/Wink3DCard';
-import { ThreeDHeartAnimation } from './components/ThreeDHeartAnimation';
 
 const apkUrl = process.env.NEXT_PUBLIC_ANDROID_APK_URL;
 const apkReady = Boolean(

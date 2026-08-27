@@ -9,8 +9,6 @@ import { profileAssistanceWorkflow } from '../../src/mastra/workflows/profile-as
 import { discoveryRecommendationsWorkflow } from '../../src/mastra/workflows/discovery-recommendations';
 import { PROFILE_FIXTURES, evaluateProfileOutput } from '../../src/mastra/evals/profile-assistant-eval';
 import { DISCOVERY_FIXTURES, evaluateDiscoveryOutput } from '../../src/mastra/evals/discovery-ranking-eval';
-import { projectPublicCandidate, sanitizeText } from './privacy-boundary';
-import { redactTracePayload } from './trace-redaction';
 import { AiService } from '../ai/ai-service';
 import { setupMockFetch, restoreFetch, setScenario } from './fake-model-provider';
 
@@ -109,8 +107,8 @@ async function runOfflineCorrectiveTests() {
       } else {
         throw new Error(`Execution returned: ${result.status}`);
       }
-    } catch (err: any) {
-      recordTest('fake-model-success', `Profile Assistant - ${fixture.id}`, 'Succeeds', false, err.message);
+    } catch (err) {
+      recordTest('fake-model-success', `Profile Assistant - ${fixture.id}`, 'Succeeds', false, (err instanceof Error ? err.message : String(err)));
     }
   }
 
@@ -142,8 +140,8 @@ async function runOfflineCorrectiveTests() {
       } else {
         throw new Error(`Execution returned: ${result.status}`);
       }
-    } catch (err: any) {
-      recordTest('fake-model-success', `Discovery Agent - ${fixture.id}`, 'Succeeds', false, err.message);
+    } catch (err) {
+      recordTest('fake-model-success', `Discovery Agent - ${fixture.id}`, 'Succeeds', false, (err instanceof Error ? err.message : String(err)));
     }
   }
 
@@ -171,8 +169,8 @@ async function runOfflineCorrectiveTests() {
     } else {
       recordTest('fallback-behavior', 'Malformed output handling', 'Succeeds', false, 'Workflow failed');
     }
-  } catch (err: any) {
-    recordTest('fallback-behavior', 'Malformed output handling', 'Succeeds', false, err.message);
+  } catch (err) {
+    recordTest('fallback-behavior', 'Malformed output handling', 'Succeeds', false, (err instanceof Error ? err.message : String(err)));
   }
 
   // Test 4: Unknown candidate ID validation
@@ -199,8 +197,8 @@ async function runOfflineCorrectiveTests() {
     } else {
       recordTest('fallback-behavior', 'Unknown candidate ID rejection', 'Succeeds', false, 'Workflow failed');
     }
-  } catch (err: any) {
-    recordTest('fallback-behavior', 'Unknown candidate ID rejection', 'Succeeds', false, err.message);
+  } catch (err) {
+    recordTest('fallback-behavior', 'Unknown candidate ID rejection', 'Succeeds', false, (err instanceof Error ? err.message : String(err)));
   }
 
   // Test 5: Duplicate candidate ID validation
@@ -227,8 +225,8 @@ async function runOfflineCorrectiveTests() {
     } else {
       recordTest('fallback-behavior', 'Duplicate candidate ID rejection', 'Succeeds', false, 'Workflow failed');
     }
-  } catch (err: any) {
-    recordTest('fallback-behavior', 'Duplicate candidate ID rejection', 'Succeeds', false, err.message);
+  } catch (err) {
+    recordTest('fallback-behavior', 'Duplicate candidate ID rejection', 'Succeeds', false, (err instanceof Error ? err.message : String(err)));
   }
 
   // Test 6: Interest score below 0 or above 1 bounds validation
@@ -254,8 +252,8 @@ async function runOfflineCorrectiveTests() {
     } else {
       recordTest('fallback-behavior', 'Interest score bounds verification', 'Succeeds', false, 'Workflow failed');
     }
-  } catch (err: any) {
-    recordTest('fallback-behavior', 'Interest score bounds verification', 'Succeeds', false, err.message);
+  } catch (err) {
+    recordTest('fallback-behavior', 'Interest score bounds verification', 'Succeeds', false, (err instanceof Error ? err.message : String(err)));
   }
 
   // Test 7: Confidence score below 0 or above 1 bounds validation
@@ -281,8 +279,8 @@ async function runOfflineCorrectiveTests() {
     } else {
       recordTest('fallback-behavior', 'Confidence score bounds verification', 'Succeeds', false, 'Workflow failed');
     }
-  } catch (err: any) {
-    recordTest('fallback-behavior', 'Confidence score bounds verification', 'Succeeds', false, err.message);
+  } catch (err) {
+    recordTest('fallback-behavior', 'Confidence score bounds verification', 'Succeeds', false, (err instanceof Error ? err.message : String(err)));
   }
 
   // Test 8: Provider timeout fallback
@@ -309,8 +307,8 @@ async function runOfflineCorrectiveTests() {
     } else {
       recordTest('fallback-behavior', 'Provider timeout handling', 'Succeeds', false, 'Workflow failed');
     }
-  } catch (err: any) {
-    recordTest('fallback-behavior', 'Provider timeout handling', 'Succeeds', false, err.message);
+  } catch (err) {
+    recordTest('fallback-behavior', 'Provider timeout handling', 'Succeeds', false, (err instanceof Error ? err.message : String(err)));
   }
 
   // Test 9: Provider error handling (500)
@@ -337,8 +335,8 @@ async function runOfflineCorrectiveTests() {
     } else {
       recordTest('fallback-behavior', 'Provider non-2xx status handling', 'Succeeds', false, 'Workflow failed');
     }
-  } catch (err: any) {
-    recordTest('fallback-behavior', 'Provider non-2xx status handling', 'Succeeds', false, err.message);
+  } catch (err) {
+    recordTest('fallback-behavior', 'Provider non-2xx status handling', 'Succeeds', false, (err instanceof Error ? err.message : String(err)));
   }
 
   // Test 10: Deterministic fallback ordering preservation
@@ -354,7 +352,7 @@ async function runOfflineCorrectiveTests() {
     if (result.status === 'success') {
       const output = result.result;
       const originalOrder = DISCOVERY_FIXTURES[0].candidates.map(c => c.candidateId);
-      const fallbackOrder = output.rankedCandidates.map((c: any) => c.candidateId);
+      const fallbackOrder = output.rankedCandidates.map((c: { candidateId: string }) => c.candidateId);
       const orderPreserved = JSON.stringify(originalOrder) === JSON.stringify(fallbackOrder);
       recordTest(
         'fallback-behavior',
@@ -366,8 +364,8 @@ async function runOfflineCorrectiveTests() {
     } else {
       recordTest('fallback-behavior', 'Deterministic fallback ordering', 'Succeeds', false, 'Workflow failed');
     }
-  } catch (err: any) {
-    recordTest('fallback-behavior', 'Deterministic fallback ordering', 'Succeeds', false, err.message);
+  } catch (err) {
+    recordTest('fallback-behavior', 'Deterministic fallback ordering', 'Succeeds', false, (err instanceof Error ? err.message : String(err)));
   }
 
   // Test 11: Prompt injection defense
@@ -382,7 +380,7 @@ async function runOfflineCorrectiveTests() {
     });
     if (result.status === 'success') {
       const output = result.result;
-      const containsInjId = output.rankedCandidates.some((r: any) => r.candidateId === 'candidate-999');
+      const containsInjId = output.rankedCandidates.some((r: { candidateId: string }) => r.candidateId === 'candidate-999');
       recordTest(
         'injection-defense',
         'Prompt-injection defense',
@@ -393,8 +391,8 @@ async function runOfflineCorrectiveTests() {
     } else {
       recordTest('injection-defense', 'Prompt-injection defense', 'Succeeds', false, 'Workflow failed');
     }
-  } catch (err: any) {
-    recordTest('injection-defense', 'Prompt-injection defense', 'Succeeds', false, err.message);
+  } catch (err) {
+    recordTest('injection-defense', 'Prompt-injection defense', 'Succeeds', false, (err instanceof Error ? err.message : String(err)));
   }
 
   // Test 12: Privacy allowlist stripping unexpected private fields
@@ -420,8 +418,8 @@ async function runOfflineCorrectiveTests() {
     } else {
       recordTest('privacy-boundary', 'Privacy allowlist stripping', 'Succeeds', false, 'Workflow failed');
     }
-  } catch (err: any) {
-    recordTest('privacy-boundary', 'Privacy allowlist stripping', 'Succeeds', false, err.message);
+  } catch (err) {
+    recordTest('privacy-boundary', 'Privacy allowlist stripping', 'Succeeds', false, (err instanceof Error ? err.message : String(err)));
   }
 
   // Restore fetch to its original implementation
@@ -438,7 +436,7 @@ async function testLiveProviderConnectivity() {
 
   try {
     const aiService = new AiService();
-    const result = await aiService.generate({
+    await aiService.generate({
       context: {
         userId: 'test-user-live-check',
         feature: 'general_assistant',
@@ -450,13 +448,13 @@ async function testLiveProviderConnectivity() {
     console.log('Structured output: passed');
     console.log('Tool calling: not tested');
     console.log('Usage metadata: available');
-  } catch (err: any) {
+  } catch (err) {
     console.log('Provider connectivity: failed');
     console.log(`Model: ${process.env.MODEL || 'auto'}`);
     console.log('Structured output: failed (fallback execution passed)');
     console.log('Tool calling: not tested');
     console.log('Usage metadata: unavailable');
-    console.log(`Failure notes: live provider validation blocked (${err.message})`);
+    console.log(`Failure notes: live provider validation blocked (${(err instanceof Error ? err.message : String(err))})`);
   }
 }
 

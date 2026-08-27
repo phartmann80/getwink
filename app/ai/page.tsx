@@ -10,7 +10,7 @@ export default function IntelligencePage() {
           <span className="legal-kicker">Privacy-First AI</span>
           <h1>GetWink Intelligence</h1>
           <p className="legal-lead">
-            Your taste is personal. Discovery should be too. GetWink's AI layer is built to assist, guide, and protect, never impersonate you.
+            Your taste is personal. Discovery should be too. GetWink&apos;s AI layer is built to assist, guide, and protect, never impersonate you.
           </p>
         </header>
 

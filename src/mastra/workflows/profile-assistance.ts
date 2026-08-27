@@ -30,8 +30,8 @@ User explicitly requested a bio draft: ${requestBioDraft ? 'YES' : 'NO'}.
       }
 
       return response.object;
-    } catch (err: any) {
-      console.warn(`[SAFE FALLBACK] Profile Assistant failed: ${err.message}. Returning default feedback.`);
+    } catch (err) {
+      console.warn(`[SAFE FALLBACK] Profile Assistant failed: ${err instanceof Error ? err.message : String(err)}. Returning default feedback.`);
       return {
         profileComplete: false,
         missingFields: [],

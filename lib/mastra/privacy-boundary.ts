@@ -17,13 +17,13 @@ export interface PublicCandidate {
  * Explicitly strips out internal identifiers, email, phone, block/report status,
  * moderation notes, subscription data, etc.
  */
-export function projectPublicCandidate(rawCandidate: Record<string, any>): PublicCandidate {
+export function projectPublicCandidate(rawCandidate: Record<string, unknown>): PublicCandidate {
   return {
     candidateId: String(rawCandidate.candidateId || ''),
     displayName: String(rawCandidate.displayName || ''),
     bio: sanitizeText(String(rawCandidate.bio || '')),
     visibleInterests: Array.isArray(rawCandidate.visibleInterests)
-      ? rawCandidate.visibleInterests.map((i: any) => sanitizeText(String(i)))
+      ? rawCandidate.visibleInterests.map((i: unknown) => sanitizeText(String(i)))
       : [],
     city: rawCandidate.city ? String(rawCandidate.city) : undefined,
   };

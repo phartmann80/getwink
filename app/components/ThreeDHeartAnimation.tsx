@@ -114,11 +114,11 @@ export function ThreeDHeartAnimation() {
         .map((v) => {
           // Rotate around Y
           let x1 = v.x * cosY - v.z * sinY;
-          let z1 = v.x * sinY + v.z * cosY;
+          const z1 = v.x * sinY + v.z * cosY;
 
           // Rotate around X
           let y2 = v.y * cosX - z1 * sinX;
-          let z2 = v.y * sinX + z1 * cosX;
+          const z2 = v.y * sinX + z1 * cosX;
 
           // Breathing scale pulse effect
           const pulse = 1 + Math.sin(time * 3) * 0.05;
