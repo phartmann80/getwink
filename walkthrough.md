@@ -190,12 +190,39 @@ Local validation ([artifact](/opt/cursor/artifacts/selfhost-build-validation.txt
   `NEXT_PUBLIC_*` values are baked in (public by design). No `ignoreBuildErrors` /
   `ignoreDuringBuilds` flags.
 
-## P3.6 Remaining (blocked on secrets / gated on cutover)
+## P3.6 Preview APK build + cloud real-device smoke test (DONE)
 
-- **Step 3a - preview APK:** `eas build --platform android --profile preview` - **blocked on
-  `EXPO_TOKEN`** (requested; absent from the VM).
-- **Step 3b - cloud real-device smoke test + recording:** **blocked on a device-farm credential**
-  (Firebase Test Lab `GCLOUD_SERVICE_KEY` / BrowserStack / Genymotion - requested).
+**Build (EAS, profile `preview`, internal distribution):** build
+`41b68445-f4dd-40d2-b930-e60f8676b004` finished; signed APK (EAS-managed keystore, cert SHA-256
+`252a08…`), package `app.getwink.beta`, versionName `0.3.0`, versionCode 3, minSdk 24 / targetSdk 36,
+sha256 `9dfa9bf9728cdbf58a475cff1fadb792e6a0d9e0734b6bb008035c92445df341`. The `preview` EAS
+environment supplies `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, and
+`EXPO_PUBLIC_API_BASE_URL=https://www.getwink.app` (www-canonical, per ruling #3).
+
+**Smoke test (BrowserStack App Automate, Google Pixel 8 / Android 14, video recorded)** using a real
+email-confirmed test account (`<configured>@agentmail.to`, confirmed via a live inbox):
+
+| # | Item | Result |
+|---|---|---|
+| 1 | App launch | PASS - auth screen renders (APK boots with baked Supabase config) |
+| 2 | Supabase auth flow | PASS - Sign in → session created → onboarding |
+| 3 | Image picker | PASS - "Choose a profile photo" opens the Android photo picker |
+| 4 | Secure-store persistence across restart | PASS - terminate + relaunch → still signed in (onboarding, not auth) |
+| 5 | API calls to production | Reaches `https://www.getwink.app`, but **production is currently down** |
+
+Artifacts: [summary](/opt/cursor/artifacts/apk-smoke-summary.txt),
+[video](/opt/cursor/artifacts/getwink-apk-smoke.mp4), screenshots under
+`/opt/cursor/artifacts/apk-smoke/`.
+
+> **Production outage finding:** `https://www.getwink.app` currently returns **HTTP 402
+> `DEPLOYMENT_DISABLED`** (Vercel deployment disabled) for both `/api/health` and the app's
+> authenticated `/api/ai/chat` call (replicated host-side with a real Supabase bearer token). This is
+> the existing Vercel production being down - precisely the driver for this migration. Supabase-backed
+> calls (auth) work because Supabase is a separate service. The self-hosted server (validated locally:
+> `/api/health` 200 `no-store`) restores the API at cutover.
+
+## P3.7 Remaining (gated on cutover)
+
 - **Steps 4-8 (cutover, gated):** provision server (Docker, nginx, certbot for both hostnames),
   deploy via the GH Action, host the signed APK at `https://www.getwink.app/download/beta.apk`
   (200, `application/vnd.android.package-archive`), set `NEXT_PUBLIC_ANDROID_APK_URL` to the www URL
