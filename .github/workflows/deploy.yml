@@ -1,7 +1,7 @@
 name: Deploy (self-hosted)
 
 # Ships the web app to our own server on merge to main.
-# Vercel is decommissioned for this project: no Vercel deploys/previews.
+# This is the only active deploy target. Vercel is left dormant (parked), not a deploy target.
 on:
   push:
     branches: [main]

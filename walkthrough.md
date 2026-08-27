@@ -168,8 +168,10 @@ offline Mastra POC fallback suite still passes.
 
 ## P3.5 Self-hosted deployment config + local validation (commit `5ee31da`)
 
-Vercel is being decommissioned; all serving moves to our own server. Committed under `deploy/` (+
-`.dockerignore`, `.github/workflows/deploy.yml`):
+All serving moves to our own server. (Vercel is **not** decommissioned — it is intentionally left
+dormant/parked for possible future reactivation, and is no longer an active deploy target; the
+leftover `vercel.json` has been removed.) Committed under `deploy/` (+ `.dockerignore`,
+`.github/workflows/deploy.yml`):
 
 | Piece | File |
 |---|---|
@@ -260,10 +262,17 @@ needs the service-role key (not yet on this VM); it is queued as the first cutov
 
 ## P3.8 Remaining (P0 cutover on credential arrival)
 
-Production is **down** (Vercel `402 DEPLOYMENT_DISABLED`), so cutover is P0 restoration (Vercel will
-**not** be resurrected). On arrival of SSH access, DNS (apex + www), and runtime env values: run
-`provision.sh` → first deploy via the GH Action only → APK to `/srv/getwink/download/beta.apk` →
-verify `https://www.getwink.app/download/beta.apk` 200 + MIME + attachment → flip
-`NEXT_PUBLIC_ANDROID_APK_URL`, redeploy, CTA live → full verification (routes, health contract,
-apex→www 301 on 80+443, 22-test security regression, re-run device API smoke item 5 against restored
-production) → hard-delete the test user → decommission Vercel → final runbook + rollback.
+Production is **down** (Vercel `402 DEPLOYMENT_DISABLED`), so cutover is P0 restoration. Vercel is
+**left dormant** (parked/disabled for possible future reactivation) — not decommissioned, not an
+active deploy target.
+
+**Server:** Strato, Ubuntu 24.04, 12 cores / 48 GB / 720 GB (activation pending). Deploy SSH public
+key (ed25519) fingerprint `SHA256:0NyW7T8QTbHrd8SDOTjOMuiNCAAqA0GML+R30Xb5Ivo`.
+
+**Locked cutover order** — on arrival of SSH access, DNS (apex + www), and runtime env values:
+`provision.sh` → **hard-delete the test user via admin API** (record confirmation here) → first
+deploy strictly via the GH Action → APK to `/srv/getwink/download/beta.apk` → verify
+`https://www.getwink.app/download/beta.apk` 200 + MIME + attachment → flip
+`NEXT_PUBLIC_ANDROID_APK_URL`, redeploy, CTA live → full verification suite (routes, health contract,
+apex→www 301 on 80+443, 22-test security regression, device API smoke item 5 re-run against restored
+production, client-bundle secret scan, ignore-flag check) → final walkthrough with runbook + rollback.

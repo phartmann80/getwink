@@ -1,7 +1,9 @@
 # GetWink self-hosted deployment runbook
 
-Production is served entirely from our own server. **Vercel is decommissioned
-for this project** — no Vercel deploys or previews.
+Production is served entirely from our own server. **Vercel is intentionally left
+dormant (parked/disabled) for possible future reactivation** — it is not decommissioned,
+and it is not an active deploy target. This repo, its CI, and these docs deploy only to our
+server; the leftover `vercel.json` has been removed so nothing points the pipeline at Vercel.
 
 - Canonical host: `https://www.getwink.app` (apex `getwink.app` 301s to www).
 - Runtime: Next.js 16 `output: "standalone"` in Docker (`node:22-bookworm-slim`,
