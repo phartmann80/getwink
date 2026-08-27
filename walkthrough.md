@@ -77,3 +77,83 @@ Visual responsiveness verified across all target viewport widths:
 - **Branch**: `patch-002d-landing-page-clone`
 - **Commit**: `Patch 002D.1: complete landing avatars and visual verification`
 - **Source Snapshot**: Created clean source archive `GetWink-Post-002D1-Source.zip` containing all codebase files, documentation, video assets, and avatars (excluding `.git`, `node_modules`, `.next`, and `.env` secrets).
+
+---
+
+# Walkthrough - GetWink Patch 003 (in progress) - Android beta APK & self-hosted deployment
+
+**Branch:** `patch-003-android-apk-and-server-deploy`
+
+> Status: this patch is **awaiting approval** on the emulator decision and the server runtime
+> before the APK build, APK hosting, and Vercel->self-host migration proceed. The sections below
+> record the environment setup and pre-build verification that are already complete. All secret
+> values are shown as `<configured>` placeholders and are never committed.
+
+## P3.1 Environment setup (Cloud Agent)
+
+- Node `v22.14.0`, npm `10.9.7`, JDK `21.0.10`, `gh` `2.91.0` present on the default image; no
+  custom system packages required for web dev or mobile bundling/EAS.
+- Repository dev environment committed at [`.cursor/environment.json`](.cursor/environment.json):
+  `install` runs `npm ci` (web root) + `npm --prefix apps/mobile ci`; the Next.js dev server is a
+  visible `web-dev` terminal.
+- `npm ci` verified idempotent for both packages (second run produced no lockfile drift).
+
+| Check | Result |
+|---|---|
+| `npm ci` (web) + `npm --prefix apps/mobile ci` | Passed (idempotent, no lock drift) |
+| Web `npm run typecheck` (`tsc --noEmit`) | Passed (0 errors) |
+| Web `npm run build` (Next 16, Turbopack) | Passed (10 routes compiled) |
+| Web dev server routes `/`, `/privacy`, `/terms`, `/safety` | HTTP 200 |
+| `GET /api/health` | HTTP 200 JSON, `Cache-Control: no-store, no-cache, must-revalidate` |
+| `POST /api/health` | HTTP 405, `Allow: GET` |
+| Mobile `npm run typecheck` | Passed (0 errors) |
+| Mobile `npx expo-doctor` | 20/20 checks passed |
+| Mobile Android JS bundle (`expo export`) | Passed (651 modules -> 2.4MB Hermes `.hbc`) |
+
+## P3.2 expo-doctor / dependency alignment (commit `17801a1`)
+
+`expo-doctor` initially failed one check (patch-version mismatches). Fixed via `expo install --fix`:
+
+| Package | Before | After (expected by SDK 55) |
+|---|---|---|
+| `react-native` | 0.83.6 | 0.83.10 |
+| `expo` | ~55.0.28 | ~55.0.30 |
+| `expo-image-picker` | ~55.0.22 | ~55.0.24 |
+| `expo-secure-store` | ~55.0.16 | ~55.0.18 |
+
+After the fix: `expo-doctor` 20/20 and `tsc --noEmit` both pass.
+
+## P3.3 Android emulator feasibility - BLOCKED (hardware virtualization)
+
+A hardware-accelerated AVD **cannot** run on this Cloud Agent VM. Evidence
+([artifact](/opt/cursor/artifacts/emulator-feasibility.txt)):
+
+- VM: Ubuntu 24.04, kernel 6.12, x86_64, 4 vCPU, 15 GiB RAM, 227 GiB free.
+- Android SDK cmdline-tools + `platform-tools` + `emulator` + `system-images;android-34;google_apis;x86_64`
+  installed; AVD `getwink_test` (Pixel 6, API 34) created.
+- `emulator -accel-check` reports "KVM (version 12) is installed and usable" (device/ioctl probe only).
+- On boot with `-enable-kvm`, qemu holds `/dev/kvm` open but accrues ~0s CPU over 8+ minutes; the
+  device stays `offline` and no guest kernel executes.
+- Root cause in host `dmesg`: `kernel BUG at arch/x86/kvm/x86.c:702!` /
+  `kvm_spurious_fault` in `vmx_vcpu_create` -> `kvm_vm_ioctl_create_vcpu` - nested KVM crashes on
+  vCPU creation, so the guest never runs. Software (TCG) emulation of a full Android 34 image is not
+  a practical substitute for interactive smoke testing.
+
+**Fallback (pending approval):** EAS internal-distribution APK installed on a physical Android device,
+and/or Expo Go on a physical device. Metro bundling for Android is verified working here.
+
+## P3.4 Remaining Patch 003 work (gated on approval / secrets)
+
+Not started - awaiting Paul's go-ahead and the required secrets/access:
+
+- Build preview APK: `eas build --platform android --profile preview` (needs `EXPO_TOKEN`).
+- Smoke test the APK against Supabase + `https://getwink.app`.
+- Host the signed APK at `https://getwink.app/download/beta.apk` (HTTP 200,
+  `Content-Type: application/vnd.android.package-archive`).
+- Enable the landing CTA by setting `NEXT_PUBLIC_ANDROID_APK_URL` only after that URL returns 200.
+- Migrate deployment off Vercel to the self-hosted server (Next.js `output: "standalone"`,
+  Docker + nginx + certbot, restart unit, deploy pipeline); move all env vars to the server.
+- Re-instate a working lint gate: Next 16 removed `next lint`; the `lint` script must be migrated to
+  the ESLint CLI with a flat config so `npm run lint` passes again (strict typecheck + lint).
+- Production verification: `/`, `/privacy`, `/terms`, `/safety`, `/api/health` (200 JSON, no-store),
+  canonical www redirect, no secrets in client bundles.
