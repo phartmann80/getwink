@@ -12,17 +12,28 @@
 # HTTP bootstrap site serving the ACME path, and exits 0 so you can re-run it
 # once DNS propagates.
 #
-# Usage:  sudo CERTBOT_EMAIL=you@example.com bash deploy/provision.sh
+# Usage (either works):
+#   CERTBOT_EMAIL=you@example.com bash deploy/provision.sh        # as the sudo-capable deploy user
+#   sudo CERTBOT_EMAIL=you@example.com bash deploy/provision.sh   # as root
 set -euo pipefail
+
+log() { echo "[provision] $*"; }
+
+# Elevate if needed: safe to run as root OR as a sudo-capable non-root user
+# (e.g. the `deploy` user). Re-exec through sudo, preserving CERTBOT_EMAIL.
+if [ "$(id -u)" -ne 0 ]; then
+  command -v sudo >/dev/null 2>&1 || { echo "Run as root, or install sudo."; exit 1; }
+  log "not root; elevating via sudo..."
+  exec sudo CERTBOT_EMAIL="${CERTBOT_EMAIL:-}" bash "$(readlink -f "$0")" "$@"
+fi
 
 DOMAIN="getwink.app"
 WWW="www.getwink.app"
 CERTBOT_EMAIL="${CERTBOT_EMAIL:-admin@getwink.app}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# The human who invoked sudo (so `docker` group membership lands on the deploy
+# user, not root). Falls back to root when run directly as root.
 DEPLOY_USER="${SUDO_USER:-$(id -un)}"
-
-log() { echo "[provision] $*"; }
-[ "$(id -u)" -eq 0 ] || { echo "Run with sudo/root."; exit 1; }
 
 # 1) System packages (apt is idempotent).
 export DEBIAN_FRONTEND=noninteractive
