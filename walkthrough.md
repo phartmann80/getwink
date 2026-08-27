@@ -199,8 +199,16 @@ sha256 `9dfa9bf9728cdbf58a475cff1fadb792e6a0d9e0734b6bb008035c92445df341`. The `
 environment supplies `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, and
 `EXPO_PUBLIC_API_BASE_URL=https://www.getwink.app` (www-canonical, per ruling #3).
 
+**Signing-cert fingerprint (permanent record — must not change across beta releases):**
+apksigner Signer #1 certificate SHA-256 `252a08ada276b9e3f9b5ff93bed7ba1bd4853ecf6e81fe7f46bb0766ad4bd9c1`
+(SHA-1 `651b64442bfa1aa703206d5debbd3fa83e06d322`). Verify every future beta APK matches this.
+
+**Device-farm deviation:** used **BrowserStack App Automate** rather than the stated primary Firebase
+Test Lab — pre-approved fallback; the terminate+relaunch persistence check is more direct in an App
+Automate session than a Test Lab robo run, and the session is video-recorded. No re-run required.
+
 **Smoke test (BrowserStack App Automate, Google Pixel 8 / Android 14, video recorded)** using a real
-email-confirmed test account (`<configured>@agentmail.to`, confirmed via a live inbox):
+email-confirmed throwaway account (since cleaned up — see P3.8):
 
 | # | Item | Result |
 |---|---|---|
@@ -221,12 +229,41 @@ Artifacts: [summary](/opt/cursor/artifacts/apk-smoke-summary.txt),
 > calls (auth) work because Supabase is a separate service. The self-hosted server (validated locally:
 > `/api/health` 200 `no-store`) restores the API at cutover.
 
-## P3.7 Remaining (gated on cutover)
+## P3.7 Open items closed + cutover preparation
 
-- **Steps 4-8 (cutover, gated):** provision server (Docker, nginx, certbot for both hostnames),
-  deploy via the GH Action, host the signed APK at `https://www.getwink.app/download/beta.apk`
-  (200, `application/vnd.android.package-archive`), set `NEXT_PUBLIC_ANDROID_APK_URL` to the www URL
-  and enable the landing CTA, run the production verification suite (`/`, `/privacy`, `/terms`,
-  `/safety`, `/api/health` 200 no-store, apex→www 301 on 80+443, 22 security tests, no client-bundle
-  secrets, no ignore flags), then decommission Vercel. Awaiting SSH access, DNS, and runtime env
-  values (provided out-of-band).
+**2a - lint warning ceiling pinned (commit pending):** `"lint": "eslint . --max-warnings=10"`.
+`npm run lint` → 0 errors, exactly 10 (`no-img-element`) warnings, exit 0; an 11th warning now fails CI.
+
+**2b - server image pruning automated (commit pending):** the deploy workflow prunes after a healthy
+deploy, keeping the 3 most recent image IDs (dedupes `latest`/`sha-*` that share an ID; skips the
+in-use image). A rollback target is always retained.
+
+**2c - test-account cleanup (DONE):** the throwaway smoke account
+(**auth.users id `3f4d1be4-9a30-48aa-b769-32d90ef4e03e`**) has been neutralized: password rotated to a
+random unrecorded value and **all sessions globally revoked** — the known credential now returns
+`invalid_credentials` (HTTP 400). The AgentMail inbox was deleted. A hard `auth.users` delete/ban
+needs the service-role key (not yet on this VM); it is queued as the first cutover action once
+`SUPABASE_ROLE_KEY` lands:
+`curl -X DELETE "$SUPABASE_URL/auth/v1/admin/users/3f4d1be4-9a30-48aa-b769-32d90ef4e03e" -H "apikey: $SUPABASE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_ROLE_KEY"`.
+(The app's `request_account_deletion` workflow could not run for this user because it never created a
+`profiles` row, so the deletion-request FK fails — expected for a login-only smoke account.)
+
+**Cutover prep (ready now, no server needed):**
+- `deploy/provision.sh` - idempotent, safe to re-run: installs Docker + nginx + certbot, creates
+  `/etc/getwink` + `/srv/getwink/download`, installs the systemd unit, serves an HTTP bootstrap so
+  certbot `--webroot` can solve ACME, issues the cert, then swaps in the full TLS nginx config
+  (both server blocks). Exits cleanly and re-runs if DNS isn't ready yet (DNS-before-certbot).
+- `deploy/README.md` - `## 0` pre-flight checklist (ordered, DNS-before-certbot) and `## 6` exact
+  post-cutover verification command list (routes, health contract, apex→www 301 on 80+443, APK
+  MIME/disposition, client-bundle secret scan, 22-test regression, ignore-flag check, item-5 re-run).
+- nginx SSL config inlined (no dependency on certbot's optional `options-ssl-nginx.conf`/dhparams).
+
+## P3.8 Remaining (P0 cutover on credential arrival)
+
+Production is **down** (Vercel `402 DEPLOYMENT_DISABLED`), so cutover is P0 restoration (Vercel will
+**not** be resurrected). On arrival of SSH access, DNS (apex + www), and runtime env values: run
+`provision.sh` → first deploy via the GH Action only → APK to `/srv/getwink/download/beta.apk` →
+verify `https://www.getwink.app/download/beta.apk` 200 + MIME + attachment → flip
+`NEXT_PUBLIC_ANDROID_APK_URL`, redeploy, CTA live → full verification (routes, health contract,
+apex→www 301 on 80+443, 22-test security regression, re-run device API smoke item 5 against restored
+production) → hard-delete the test user → decommission Vercel → final runbook + rollback.
