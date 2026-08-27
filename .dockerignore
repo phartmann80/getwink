@@ -1,0 +1,20 @@
+# Build context hygiene for the web (Next.js) image.
+.git
+node_modules
+.next
+out
+dist
+apps
+docs
+deploy
+.github
+.expo
+terminals
+coverage
+*.md
+.env
+.env.*
+*.apk
+*.tsbuildinfo
+.vercel
+vercel.json

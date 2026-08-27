@@ -1,0 +1,22 @@
+# systemd unit that brings the GetWink compose stack up on boot and keeps it
+# reconciled. Install to /etc/systemd/system/getwink.service, then:
+#   sudo systemctl daemon-reload && sudo systemctl enable --now getwink.service
+[Unit]
+Description=GetWink web (Docker Compose)
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/srv/getwink
+# Optional: defines GETWINK_IMAGE (pinned tag) for the compose file.
+EnvironmentFile=-/etc/getwink/deploy.env
+ExecStartPre=/usr/bin/docker compose -f /srv/getwink/compose.yml pull
+ExecStart=/usr/bin/docker compose -f /srv/getwink/compose.yml up -d --remove-orphans
+ExecStop=/usr/bin/docker compose -f /srv/getwink/compose.yml down
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target
