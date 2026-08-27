@@ -100,3 +100,12 @@ jobs:
             echo "Attempt $i: HTTP $code; retrying in 6s"; sleep 6
           done
           echo "Health gate failed after deploy"; exit 1
+
+      - name: Prune old images (keep the last 3 on the server)
+        run: |
+          ssh -i ~/.ssh/id_deploy "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" '
+            docker images "ghcr.io/phartmann80/getwink" --format "{{.CreatedAt}}\t{{.ID}}" \
+              | sort -r | awk "!seen[\$NF]++{print \$NF}" | tail -n +4 \
+              | xargs -r docker rmi 2>/dev/null || true
+            echo "Retained images:"; docker images "ghcr.io/phartmann80/getwink" --format "  {{.Repository}}:{{.Tag}} ({{.ID}})"
+          '
