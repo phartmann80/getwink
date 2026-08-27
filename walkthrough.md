@@ -139,21 +139,67 @@ A hardware-accelerated AVD **cannot** run on this Cloud Agent VM. Evidence
   vCPU creation, so the guest never runs. Software (TCG) emulation of a full Android 34 image is not
   a practical substitute for interactive smoke testing.
 
-**Fallback (pending approval):** EAS internal-distribution APK installed on a physical Android device,
-and/or Expo Go on a physical device. Metro bundling for Android is verified working here.
+**Fallback (approved):** build the EAS preview APK, then run the interactive smoke test on a
+**cloud real-device** service (Firebase Test Lab preferred, else BrowserStack App Live or Genymotion
+SaaS) with recording. Physical-device re-verification is optional and not a blocker. Metro bundling
+for Android is verified working here.
 
-## P3.4 Remaining Patch 003 work (gated on approval / secrets)
+## P3.4 Lint gate migrated to ESLint flat config (commit `dca7795`)
 
-Not started - awaiting Paul's go-ahead and the required secrets/access:
+Next 16 removed `next lint`. `"lint"` is now `eslint .` with `eslint.config.mjs`. Because
+`eslint-config-next@16` ships **native flat configs**, they are composed directly
+(`...nextCoreWebVitals`, `...nextTypescript`); `FlatCompat` is only for legacy `.eslintrc` configs
+and crashes ("Converting circular structure to JSON") on flat configs.
 
-- Build preview APK: `eas build --platform android --profile preview` (needs `EXPO_TOKEN`).
-- Smoke test the APK against Supabase + `https://getwink.app`.
-- Host the signed APK at `https://getwink.app/download/beta.apk` (HTTP 200,
-  `Content-Type: application/vnd.android.package-archive`).
-- Enable the landing CTA by setting `NEXT_PUBLIC_ANDROID_APK_URL` only after that URL returns 200.
-- Migrate deployment off Vercel to the self-hosted server (Next.js `output: "standalone"`,
-  Docker + nginx + certbot, restart unit, deploy pipeline); move all env vars to the server.
-- Re-instate a working lint gate: Next 16 removed `next lint`; the `lint` script must be migrated to
-  the ESLint CLI with a flat config so `npm run lint` passes again (strict typecheck + lint).
-- Production verification: `/`, `/privacy`, `/terms`, `/safety`, `/api/health` (200 JSON, no-store),
-  canonical www redirect, no secrets in client bundles.
+The migration surfaced 44 errors + 18 warnings; all **44 errors fixed with no suppression**:
+
+- `@typescript-eslint/no-explicit-any` across `lib/mastra/*`, `src/mastra/workflows/*`, and the
+  Langdock provider - replaced with `unknown`/precise types, `new RuntimeContext()` for the tool
+  call, and guarded `err.message` in `catch` blocks.
+- `react-hooks/set-state-in-effect` in `HeroVideo` - refactored to `useSyncExternalStore`.
+- `react/no-unescaped-entities`, `prefer-const`, and unused imports/vars.
+
+`npm run lint` exits 0. The 10 remaining `@next/next/no-img-element` **warnings** are the deliberate
+`<img>` usages on the pixel-verified Patch 002D landing; they are not suppressed (rule stays active),
+and `eslint .` exits 0 with warnings present (matching the agreed script). Converting them to
+`next/image` was deliberately deferred to avoid regressing accepted 002D layout and to keep the
+image optimizer/`sharp` out of the self-hosted runtime. `typecheck` + `build` stay green and the
+offline Mastra POC fallback suite still passes.
+
+## P3.5 Self-hosted deployment config + local validation (commit `5ee31da`)
+
+Vercel is being decommissioned; all serving moves to our own server. Committed under `deploy/` (+
+`.dockerignore`, `.github/workflows/deploy.yml`):
+
+| Piece | File |
+|---|---|
+| Standalone output | `next.config.ts` (`output: "standalone"`) |
+| Image (multi-stage, node:22-bookworm-slim, non-root) | `deploy/Dockerfile` |
+| Runtime (loopback web, env_file secrets, healthcheck, image pin) | `deploy/compose.yml` |
+| Boot/restart | `deploy/getwink.service` (systemd) |
+| Edge (www-canonical, apex 301→www, TLS, security headers, APK MIME) | `deploy/nginx/getwink.conf` |
+| CI/CD | `.github/workflows/deploy.yml` (typecheck+lint → GHCR image → SSH pull/up → health gate) |
+| Runbook + env template | `deploy/README.md`, `deploy/getwink.env.example` |
+
+Local validation ([artifact](/opt/cursor/artifacts/selfhost-build-validation.txt)):
+
+- Standalone `node server.js`: `GET /api/health` 200 JSON `no-store`; `POST` 405; `/`, `/privacy`,
+  `/terms`, `/safety`, `/ai`, `/how` all 200.
+- Built the Docker image and ran the container (runs as non-root `nextjs`): same health/route results.
+- Client bundle (`.next/static`) contains **no** `SUPABASE_ROLE_KEY` / `LANGDOCK_*` references;
+  `NEXT_PUBLIC_*` values are baked in (public by design). No `ignoreBuildErrors` /
+  `ignoreDuringBuilds` flags.
+
+## P3.6 Remaining (blocked on secrets / gated on cutover)
+
+- **Step 3a - preview APK:** `eas build --platform android --profile preview` - **blocked on
+  `EXPO_TOKEN`** (requested; absent from the VM).
+- **Step 3b - cloud real-device smoke test + recording:** **blocked on a device-farm credential**
+  (Firebase Test Lab `GCLOUD_SERVICE_KEY` / BrowserStack / Genymotion - requested).
+- **Steps 4-8 (cutover, gated):** provision server (Docker, nginx, certbot for both hostnames),
+  deploy via the GH Action, host the signed APK at `https://www.getwink.app/download/beta.apk`
+  (200, `application/vnd.android.package-archive`), set `NEXT_PUBLIC_ANDROID_APK_URL` to the www URL
+  and enable the landing CTA, run the production verification suite (`/`, `/privacy`, `/terms`,
+  `/safety`, `/api/health` 200 no-store, apex→www 301 on 80+443, 22 security tests, no client-bundle
+  secrets, no ignore flags), then decommission Vercel. Awaiting SSH access, DNS, and runtime env
+  values (provided out-of-band).
