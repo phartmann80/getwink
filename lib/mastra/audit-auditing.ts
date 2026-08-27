@@ -30,14 +30,14 @@ export interface AuditAiEvent {
     traceId?: string;
     errorCategory?: string;
     fallback_used?: boolean;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
 /**
  * Normalizes internal errors into controlled client-safe categories without leaking credentials.
  */
-export function normalizeError(err: any): { category: string; message: string; status: number } {
+export function normalizeError(err: unknown): { category: string; message: string; status: number } {
   const errMsg = err instanceof Error ? err.message : String(err);
   const errMsgLower = errMsg.toLowerCase();
 
@@ -172,7 +172,7 @@ export async function auditAiUsage(event: AuditAiEvent): Promise<void> {
     if (error) {
       console.error('[AUDITING ERROR] Failed to insert audit event in Database:', error.message);
     }
-  } catch (err: any) {
-    console.error('[AUDITING ERROR] Critical failed to insert audit usage:', err.message);
+  } catch (err) {
+    console.error('[AUDITING ERROR] Critical failed to insert audit usage:', err instanceof Error ? err.message : String(err));
   }
 }

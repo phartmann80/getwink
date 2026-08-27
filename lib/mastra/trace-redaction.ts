@@ -40,10 +40,10 @@ export function redactTracePayload<T>(payload: T): T {
   );
 
   const parsed = JSON.parse(scrubbedString);
-  return deepScrub(parsed);
+  return deepScrub(parsed) as T;
 }
 
-function deepScrub(obj: any): any {
+function deepScrub(obj: unknown): unknown {
   if (obj === null || obj === undefined) return obj;
 
   if (Array.isArray(obj)) {
@@ -51,15 +51,17 @@ function deepScrub(obj: any): any {
   }
 
   if (typeof obj === 'object') {
-    const scrubbed: Record<string, any> = {};
-    for (const key of Object.keys(obj)) {
+    const source = obj as Record<string, unknown>;
+    const scrubbed: Record<string, unknown> = {};
+    for (const key of Object.keys(source)) {
+      const value = source[key];
       // Exclude known internal database keys or moderation notes completely
       if (['moderationNotes', 'rawDbRow', 'privateMessage', 'sessionToken'].includes(key)) {
         scrubbed[key] = '<redacted-internal-field>';
-      } else if (typeof obj[key] === 'string') {
-        scrubbed[key] = sanitizeText(obj[key]);
+      } else if (typeof value === 'string') {
+        scrubbed[key] = sanitizeText(value);
       } else {
-        scrubbed[key] = deepScrub(obj[key]);
+        scrubbed[key] = deepScrub(value);
       }
     }
     return scrubbed;

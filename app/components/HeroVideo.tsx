@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useSyncExternalStore } from 'react';
 
 interface HeroVideoProps {
   className?: string;
@@ -9,32 +9,29 @@ interface HeroVideoProps {
   ariaLabel: string;
 }
 
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
+
+function subscribeReducedMotion(onChange: () => void) {
+  const mediaQuery = window.matchMedia(REDUCED_MOTION_QUERY);
+  mediaQuery.addEventListener('change', onChange);
+  return () => mediaQuery.removeEventListener('change', onChange);
+}
+
+function getReducedMotionSnapshot() {
+  return window.matchMedia(REDUCED_MOTION_QUERY).matches;
+}
+
+function getReducedMotionServerSnapshot() {
+  return false;
+}
+
 export function HeroVideo({ className, src, poster, ariaLabel }: HeroVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReducedMotion(mediaQuery.matches);
-
-    const handleChange = (e: MediaQueryListEvent) => {
-      setPrefersReducedMotion(e.matches);
-    };
-
-    if ('addEventListener' in mediaQuery) {
-      mediaQuery.addEventListener('change', handleChange);
-    } else {
-      (mediaQuery as any).addListener(handleChange);
-    }
-
-    return () => {
-      if ('addEventListener' in mediaQuery) {
-        mediaQuery.removeEventListener('change', handleChange);
-      } else {
-        (mediaQuery as any).removeListener(handleChange);
-      }
-    };
-  }, []);
+  const prefersReducedMotion = useSyncExternalStore(
+    subscribeReducedMotion,
+    getReducedMotionSnapshot,
+    getReducedMotionServerSnapshot,
+  );
 
   useEffect(() => {
     if (videoRef.current) {

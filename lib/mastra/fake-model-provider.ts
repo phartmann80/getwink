@@ -20,7 +20,7 @@ export function setupMockFetch() {
 
     const body = init?.body ? JSON.parse(init.body as string) : {};
     const messages = body.messages || [];
-    const promptText = messages.map((m: any) => m.content).join('\n');
+    const promptText = messages.map((m: { content?: string }) => m.content).join('\n');
 
     // 1. Simulate provider timeout scenario
     if (currentScenario === 'timeout') {

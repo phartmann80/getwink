@@ -13,16 +13,16 @@ interface APIAssertion {
 }
 
 const assertions: APIAssertion[] = [];
-let devUserIdBackup = process.env.DEV_USER_ID;
+const devUserIdBackup = process.env.DEV_USER_ID;
 let testUserId = '00000000-0000-0000-0000-000000000001';
 let createdUserId: string | null = null;
 
 // Setup mock fetch by default
 setupMockFetch();
 
-function assertEqual(actual: any, expected: any, message: string) {
+function assertEqual(actual: unknown, expected: unknown, message: string) {
   if (actual !== expected) {
-    throw new Error(`${message}: expected ${expected}, got ${actual}`);
+    throw new Error(`${message}: expected ${String(expected)}, got ${String(actual)}`);
   }
 }
 
@@ -644,7 +644,7 @@ assertions.push({
   name: 'DEV_USER_ID Production Denial Check',
   run: async () => {
     const originalEnv = process.env.NODE_ENV;
-    (process.env as any).NODE_ENV = 'production';
+    (process.env as Record<string, string | undefined>).NODE_ENV = 'production';
     
     process.env.DEV_USER_ID = testUserId;
     process.env.GETWINK_MASTRA_POC_ENABLED = 'true';
@@ -666,7 +666,7 @@ assertions.push({
       const json = await res.json();
       assertEqual(json.error, 'Authentication is required.', 'Expected authentication failure');
     } finally {
-      (process.env as any).NODE_ENV = originalEnv;
+      (process.env as Record<string, string | undefined>).NODE_ENV = originalEnv;
       process.env.DEV_USER_ID = devUserIdBackup;
     }
   },
@@ -771,8 +771,8 @@ async function runAll() {
       testUserId = userId;
       console.log(`[SETUP] Created test user and profile ID: ${testUserId}`);
     }
-  } catch (err: any) {
-    console.warn('[SETUP] WARNING: Database setup error:', err.message);
+  } catch (err) {
+    console.warn('[SETUP] WARNING: Database setup error:', (err instanceof Error ? err.message : String(err)));
   }
 
   let passedCount = 0;
@@ -785,8 +785,8 @@ async function runAll() {
         await assertion.run();
         console.log(`[PASS] ${assertion.name}`);
         passedCount++;
-      } catch (err: any) {
-        console.error(`[FAIL] ${assertion.name}: ${err.message}`);
+      } catch (err) {
+        console.error(`[FAIL] ${assertion.name}: ${(err instanceof Error ? err.message : String(err))}`);
         failedCount++;
       }
     }
@@ -795,8 +795,8 @@ async function runAll() {
       try {
         await serviceClient.auth.admin.deleteUser(createdUserId);
         console.log(`[CLEANUP] Deleted test auth user: ${createdUserId}`);
-      } catch (err: any) {
-        console.error('[CLEANUP ERROR] Failed:', err.message);
+      } catch (err) {
+        console.error('[CLEANUP ERROR] Failed:', (err instanceof Error ? err.message : String(err)));
       }
     }
   }

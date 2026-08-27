@@ -1,8 +1,14 @@
 import { createStep, createWorkflow } from '@mastra/core/workflows';
+import { RuntimeContext } from '@mastra/core/runtime-context';
 import { z } from 'zod';
 import { discoveryInterestAgent } from '../agents/discovery-interest-agent';
 import { DiscoveryRankingOutputSchema } from '../schemas/discovery-ranking';
-import { getControlledCandidatePool } from '../tools/get-controlled-candidate-pool';
+import {
+  getControlledCandidatePool,
+  ToolOutputCandidateSchema,
+} from '../tools/get-controlled-candidate-pool';
+
+type CleanCandidate = z.infer<typeof ToolOutputCandidateSchema>;
 
 export const recommendCandidatesStep = createStep({
   id: 'recommend-candidates-step',
@@ -15,15 +21,15 @@ export const recommendCandidatesStep = createStep({
     const { interestHistory, rawCandidates } = inputData;
 
     // 1. Process candidate pool through the controlled tool (allowlist projection & deduplication)
-    let cleanCandidates: any[] = [];
+    let cleanCandidates: CleanCandidate[] = [];
     try {
       const toolResult = await getControlledCandidatePool.execute({
         context: { rawCandidates },
-        runtimeContext: {} as any,
+        runtimeContext: new RuntimeContext(),
       });
       cleanCandidates = toolResult.candidates;
-    } catch (err: any) {
-      console.warn(`Controlled candidate pool tool failed: ${err.message}. Safely falling back.`);
+    } catch (err) {
+      console.warn(`Controlled candidate pool tool failed: ${err instanceof Error ? err.message : String(err)}. Safely falling back.`);
       // Manual fallback projection
       cleanCandidates = rawCandidates
         .filter((c) => c.isBlocked !== true && c.isReported !== true)
@@ -101,9 +107,9 @@ Rank the candidates according to their interestScore matching the user's history
       verifiedRankings.sort((a, b) => b.interestScore - a.interestScore);
 
       return { rankedCandidates: verifiedRankings };
-    } catch (err: any) {
+    } catch (err) {
       // SAFE FALLBACK: If AI fails, return the original candidate list in its deterministic order
-      console.warn(`[SAFE FALLBACK] Discovery Interest Agent failed: ${err.message}. Returning deterministic order.`);
+      console.warn(`[SAFE FALLBACK] Discovery Interest Agent failed: ${err instanceof Error ? err.message : String(err)}. Returning deterministic order.`);
       
       const fallbackRankings = cleanCandidates.map((c) => ({
         candidateId: c.candidateId,
